@@ -1,99 +1,298 @@
-# Ramadan Tracker
+# Ramadan Tracker 🌙
 
-Bilingual (AR/EN) web app for tracking daily worship, habits, and challenges during Ramadan.
+A comprehensive full-stack web application for tracking daily worship, habits, and spiritual progress during Ramadan. Built with Next.js 14 and Express.js, featuring bilingual support (Arabic/English), family sharing, and automated reminders.
 
-## Project Structure
+## ✨ Features
 
-```
-ramadan_tracker/
-├── frontend/          # Next.js 14 (App Router) + TypeScript + Tailwind CSS
-│   └── src/
-│       └── app/       # Next.js app directory
-├── backend/           # Express + TypeScript REST API
-│   └── src/
-│       ├── middleware/ # Auth, error handling
-│       └── routes/    # API route handlers
-├── shared/            # Shared TypeScript types (used by both frontend & backend)
-│   └── src/
-│       └── types/     # User, Tracker, Challenge, Family, Report types
-├── desgin/            # Original static HTML/CSS/JS prototype
-├── PRODUCT_IMPLEMENTATION_PLAN.md
-├── TASKS.md
-└── WORKTHROUGH.md
-```
+### 📿 Daily Worship Tracking
+- **Ibadah (العبادة)**: Track intentions, Quran recitation, dhikr, prayers, charity, and more
+- **Salah Tracker**: Monitor all five daily prayers with rakat counting
+- **Sunnah Tracker**: Follow prophetic traditions (morning/evening dhikr, tahajjud, tarawih, etc.)
+- **Habits**: Build positive habits (no smoking, exercise, healthy eating, water intake)
+- **Mood & Gratitude**: Daily emotional tracking and gratitude journal
+- **Quran & Hadith**: Track Quran reading progress and daily hadith reflections
 
-## Quick Start
+### 🏆 Challenge System
+- Create personal challenges (daily, weekly, monthly scope)
+- Track progress with percentage completion and notes
+- Visual progress history with completion badges
+- Edit past dates, delete old entries
+
+### 👨‍👩‍👧‍👦 Family Features
+- Create family groups and invite members
+- Visibility approvals for privacy control
+- Comments and reactions on shared content
+- Encourage each other through Ramadan
+
+### 📊 Dashboard & Reports
+- Personal dashboard with streaks, scores, and trends
+- Generate detailed reports (public or private)
+- Share reports via unique links
+- Daily breakdown with completion metrics
+
+### 🌍 Bilingual Support
+- Full Arabic/English language support
+- RTL layout for Arabic
+- Language toggle in navbar
+- Localized date formats (Hijri/Gregorian)
+
+### ⏰ Reminders
+- Automated email reminders at 9 PM local time
+- Bilingual reminder templates
+- Delivery metrics dashboard
+- Skip tracking for incomplete days
+
+### 🔒 Security Features
+- JWT authentication with refresh tokens
+- Password hashing (bcrypt)
+- Rate limiting on endpoints
+- CORS protection
+- Input validation (Zod)
+- Permanent daily locks at midnight
+
+## 🛠 Tech Stack
+
+### Frontend
+- **Framework**: Next.js 14 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **State Management**: React hooks
+- **API**: Custom fetch wrapper with auth
+
+### Backend
+- **Runtime**: Node.js
+- **Framework**: Express.js
+- **Database**: MongoDB with Mongoose ODM
+- **Authentication**: JWT with refresh tokens
+- **Validation**: Zod schemas
+- **Email**: Nodemailer
+- **Scheduling**: node-cron
+
+### Testing
+- **Framework**: Vitest
+- **API Testing**: Supertest
+- **Database**: MongoDB Memory Server
+- **Coverage**: 36 tests passing (unit + integration)
+
+## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ (LTS)
-- PostgreSQL (for production; stubs work without DB)
+- Node.js 18+ 
+- MongoDB 5.0+
+- npm or yarn
 
-### Install & Run
+### Installation
 
-```bash
-# Install all workspace dependencies
-npm install
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/mmahmoudai/ramadan-sch.git
+   cd ramadan-sch
+   ```
 
-# Run both frontend (port 3000) and backend (port 4000) concurrently
-npm run dev
+2. **Install dependencies**
+   ```bash
+   # Install root dependencies
+   npm install
+   
+   # Install backend dependencies
+   cd backend
+   npm install
+   
+   # Install frontend dependencies
+   cd ../frontend
+   npm install
+   
+   # Install shared types
+   cd ../shared
+   npm install
+   ```
 
-# Or run individually
-npm run dev:frontend   # http://localhost:3000
-npm run dev:backend    # http://localhost:4000
+3. **Environment Setup**
+   ```bash
+   # Backend environment
+   cp backend/.env.example backend/.env
+   # Edit backend/.env with your settings
+   
+   # Frontend environment
+   cp frontend/.env.local.example frontend/.env.local
+   # Edit frontend/.env.local with your settings
+   ```
+
+4. **Database Setup**
+   ```bash
+   cd backend
+   npm run migrate  # Create indexes
+   npm run seed     # Seed test data
+   ```
+
+5. **Start Development Servers**
+   ```bash
+   # Terminal 1: Backend
+   cd backend
+   npm run dev
+   
+   # Terminal 2: Frontend
+   cd frontend
+   npm run dev
+   ```
+
+6. **Access the Application**
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:4000
+
+### Test Accounts
+After seeding, you can use these accounts:
+- **ahmad@example.com** / password123 (English, 7 entries, 3 challenges)
+- **fatima@example.com** / password123 (Arabic, 5 entries, 1 challenge)
+- **omar@example.com** / password123 (English, invited to family)
+
+## 📁 Project Structure
+
+```
+ramdan-sch/
+├── backend/                 # Express.js API
+│   ├── src/
+│   │   ├── models/         # MongoDB models
+│   │   ├── routes/         # API routes
+│   │   ├── middleware/     # Auth, error handling, rate limiting
+│   │   ├── utils/          # Helper functions
+│   │   ├── jobs/           # Cron jobs (reminders)
+│   │   ├── scripts/        # Migration & seeding
+│   │   └── tests/          # Unit & integration tests
+│   └── package.json
+├── frontend/               # Next.js app
+│   ├── src/
+│   │   ├── app/           # App router pages
+│   │   ├── components/    # Reusable components
+│   │   └── lib/           # Utilities, API, auth, i18n
+│   └── package.json
+├── shared/                # Shared TypeScript types
+│   └── src/
+│       └── types/        # Type definitions
+└── design/               # Design mockups
 ```
 
+## 🧪 Testing
+
+```bash
+# Run all tests
+cd backend
+npm test
+
+# Run tests with coverage
+npm run test:coverage
+
+# Run specific test files
+npx vitest src/tests/unit/
+npx vitest src/tests/integration/
+```
+
+## 📝 API Documentation
+
+### Authentication
+- `POST /auth/signup` - Create new account
+- `POST /auth/login` - Login with email/password
+- `POST /auth/logout` - Logout (invalidate refresh token)
+- `POST /auth/refresh` - Get new access token
+
+### Daily Tracker
+- `GET /entries` - List entries (with date range)
+- `GET /entries/:date` - Get specific day's entry
+- `PUT /entries/:date` - Update/create entry
+- `POST /entries/:date/submit` - Lock day's entry
+
+### Challenges
+- `GET /challenges` - List user challenges
+- `POST /challenges` - Create new challenge
+- `PATCH /challenges/:id` - Update challenge
+- `POST /challenges/:id/progress` - Add/update progress
+- `DELETE /challenges/:id/progress/:date` - Delete progress
+
+### Reports
+- `GET /reports` - List user reports
+- `POST /reports` - Create new report
+- `GET /reports/public/:token` - Access public report
+- `GET /reports/mine` - Get private reports
+
+### Family
+- `GET /families` - List family groups
+- `POST /families` - Create family group
+- `POST /families/:id/invite` - Invite member
+- `POST /families/:id/join` - Join with invite code
+
+## 🌍 Internationalization
+
+The app supports Arabic and English with:
+- Dynamic language switching
+- RTL layout for Arabic
+- Localized date formats (Hijri/Gregorian)
+- Translated UI strings
+
+## 📅 Hijri Calendar
+
+The app displays Hijri dates with:
+- Accurate conversion from Gregorian
+- Month names in both languages
+- Automatic detection of Ramadan
+- Historical tracking
+
+## 🔔 Email Reminders
+
+Configure SMTP settings in `.env`:
+```env
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+EMAIL_FROM=noreply@ramadantracker.app
+```
+
+## 🚀 Deployment
+
 ### Environment Variables
+**Backend (.env)**:
+```env
+PORT=4000
+FRONTEND_URL=https://yourdomain.com
+NODE_ENV=production
+JWT_SECRET=your-secure-secret
+MONGO_URI=mongodb://localhost:27017/ramadan_tracker
+```
 
-Copy `.env.example` to `.env` at root and fill in values. See also:
-- `frontend/.env.local.example`
-- `backend/.env.example`
+**Frontend (.env.local)**:
+```env
+NEXT_PUBLIC_API_URL=https://api.yourdomain.com
+```
 
-## Tech Stack
+### Docker Deployment
+```dockerfile
+# Add Dockerfile configuration here
+```
 
-| Layer    | Technology                                      |
-|----------|-------------------------------------------------|
-| Frontend | Next.js 14, React 18, TypeScript, Tailwind CSS  |
-| Backend  | Express, TypeScript, Zod validation              |
-| Auth     | JWT (bcryptjs + jsonwebtoken)                    |
-| Database | PostgreSQL (planned)                             |
-| Shared   | TypeScript interfaces in `shared/` workspace     |
+## 🤝 Contributing
 
-## API Endpoints (Stubs)
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-| Method | Path                    | Auth | Status |
-|--------|-------------------------|------|--------|
-| POST   | /auth/signup            | No   | Stub   |
-| POST   | /auth/login             | No   | Stub   |
-| POST   | /auth/logout            | No   | Stub   |
-| POST   | /auth/password/forgot   | No   | Stub   |
-| POST   | /auth/password/reset    | No   | Stub   |
-| GET    | /me                     | Yes  | Stub   |
-| PATCH  | /me/profile             | Yes  | Stub   |
-| PATCH  | /me/settings            | Yes  | Stub   |
-| GET    | /entries/:date          | Yes  | Stub   |
-| PUT    | /entries/:date          | Yes  | Stub   |
-| POST   | /entries/:date/submit   | Yes  | Stub   |
-| GET    | /challenges             | Yes  | Stub   |
-| POST   | /challenges             | Yes  | Stub   |
-| PATCH  | /challenges/:id         | Yes  | Stub   |
-| POST   | /challenges/:id/progress| Yes  | Stub   |
-| POST   | /families               | Yes  | Stub   |
-| POST   | /families/:id/invite    | Yes  | Stub   |
-| POST   | /reports                | Yes  | Stub   |
-| GET    | /reports/:id            | Yes  | Stub   |
-| GET    | /reports/public/:token  | No   | Stub   |
-| POST   | /reports/:id/revoke     | Yes  | Stub   |
-| GET    | /health                 | No   | Active |
+## 📄 License
 
-## Build Order (from WORKTHROUGH.md)
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-1. Auth/session
-2. Profile/settings
-3. Calendar engine (Hijri-first)
-4. Daily tracker + lock enforcement
-5. Challenge system
-6. Dashboard analytics
-7. Family sharing + comments/reactions
-8. Reports + share links
-9. Reminder emails
-10. Hardening, QA, and launch
+## 🙏 Acknowledgments
+
+- Ramadan Mubarak! May this app help you make the most of the blessed month.
+- Thanks to all contributors and the open-source community.
+- Special thanks to the Umm al-Qura calendar for Hijri date calculations.
+
+## 📞 Support
+
+For issues, questions, or suggestions:
+- Open an issue on GitHub
+- Email: support@ramadantracker.app
+
+---
+
+**Ramadan Kareem! رمضان كريم** 🌙✨
