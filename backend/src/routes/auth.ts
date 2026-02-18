@@ -6,6 +6,7 @@ import { RefreshToken } from "../models/RefreshToken";
 import { AuditLog } from "../models/AuditLog";
 import { generateAccessToken, generateRefreshToken, getRefreshTokenExpiry } from "../utils/tokens";
 import { AppError } from "../middleware/errorHandler";
+import { sendWelcomeEmail, sendPasswordResetEmail } from "../utils/mailer";
 
 export const authRouter = Router();
 
@@ -43,6 +44,9 @@ authRouter.post("/signup", async (req: Request, res: Response, next: NextFunctio
     });
 
     await AuditLog.create({ actorUserId: user._id, action: "signup", targetType: "user", targetId: user._id.toString() });
+
+    // Send welcome email (fire-and-forget)
+    sendWelcomeEmail(user.email, user.displayName).catch((e) => console.error("[MAIL] Welcome email failed:", e));
 
     res.status(201).json({
       accessToken,
@@ -136,12 +140,12 @@ authRouter.post("/password/forgot", async (req: Request, res: Response, next: Ne
     user.resetPasswordExpires = new Date(Date.now() + 60 * 60 * 1000);
     await user.save();
 
-    // In production, send email with reset link containing `token`
-    console.log(`[DEV] Password reset token for ${email}: ${token}`);
+    // Send password reset email
+    sendPasswordResetEmail(user.email, user.displayName, token).catch((e) => console.error("[MAIL] Password reset email failed:", e));
 
     await AuditLog.create({ actorUserId: user._id, action: "password_reset_request", targetType: "user", targetId: user._id.toString() });
 
-    res.json({ message: "If an account exists, a reset link has been sent.", devToken: token });
+    res.json({ message: "If an account exists, a reset link has been sent." });
   } catch (err) {
     next(err);
   }

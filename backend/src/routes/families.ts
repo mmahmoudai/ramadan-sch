@@ -6,6 +6,7 @@ import { User } from "../models/User";
 import { AuditLog } from "../models/AuditLog";
 import { requireAuth, AuthRequest } from "../middleware/auth";
 import { AppError } from "../middleware/errorHandler";
+import { sendFamilyInviteEmail, sendFamilyInviteConfirmation } from "../utils/mailer";
 
 export const familiesRouter = Router();
 
@@ -59,6 +60,16 @@ familiesRouter.post("/:id/invite", requireAuth, async (req: AuthRequest, res: Re
     await group.save();
 
     await AuditLog.create({ actorUserId: req.user!.userId, action: "family_invite", targetType: "family_group", targetId: group._id.toString(), metadata: { inviteeId: invitee._id } });
+
+    // Send emails to both invitee and inviter (fire-and-forget)
+    const inviter = await User.findById(req.user!.userId);
+    const inviterName = inviter?.displayName || "Someone";
+    sendFamilyInviteEmail(invitee.email, invitee.displayName, inviterName, group.name)
+      .catch((e) => console.error("[MAIL] Family invite email failed:", e));
+    if (inviter) {
+      sendFamilyInviteConfirmation(inviter.email, inviter.displayName, invitee.displayName, group.name)
+        .catch((e) => console.error("[MAIL] Family invite confirmation failed:", e));
+    }
 
     res.json({ group });
   } catch (err) {

@@ -2,16 +2,7 @@ import cron from "node-cron";
 import { User } from "../models/User";
 import { DailyEntry } from "../models/DailyEntry";
 import { EmailReminder } from "../models/EmailReminder";
-import nodemailer from "nodemailer";
-
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || "localhost",
-  port: parseInt(process.env.SMTP_PORT || "1025"),
-  secure: false,
-  auth: process.env.SMTP_USER
-    ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
-    : undefined,
-});
+import { sendDailyReminderEmail } from "../utils/mailer";
 
 async function processReminders() {
   console.log("[CRON] Processing reminders...");
@@ -58,18 +49,9 @@ async function processReminders() {
 
         // Send reminder email
         const isArabic = user.language === "ar";
-        const subject = isArabic ? "تذكير رمضان - لم تكمل تسجيل يومك بعد" : "Ramadan Reminder - You haven't completed today's tracker";
-        const text = isArabic
-          ? `السلام عليكم ${user.displayName}،\n\nلم تكمل تسجيل يومك بعد في متتبع رمضان.\nلا تنسَ أن تسجل عباداتك وعاداتك اليومية.\n\nبارك الله فيك`
-          : `Assalamu Alaikum ${user.displayName},\n\nYou haven't completed today's entry in the Ramadan Tracker.\nDon't forget to log your daily worship and habits.\n\nBarakAllahu Feek`;
 
         try {
-          await transporter.sendMail({
-            from: process.env.EMAIL_FROM || "noreply@ramadantracker.app",
-            to: user.email,
-            subject,
-            text,
-          });
+          await sendDailyReminderEmail(user.email, user.displayName, isArabic);
 
           await EmailReminder.create({
             userId: user._id,
