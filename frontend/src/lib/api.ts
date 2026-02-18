@@ -32,6 +32,11 @@ export async function apiFetch<T = unknown>(path: string, options: FetchOptions 
   const { token, headers: customHeaders, _retried, ...rest } = options;
 
   const authToken = token || getToken();
+  const isAuthEndpoint =
+    path.startsWith("/auth/login") ||
+    path.startsWith("/auth/signup") ||
+    path.startsWith("/auth/refresh") ||
+    path.startsWith("/auth/password");
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...((customHeaders as Record<string, string>) || {}),
@@ -44,7 +49,7 @@ export async function apiFetch<T = unknown>(path: string, options: FetchOptions 
   const res = await fetch(`${API_URL}${path}`, { headers, ...rest });
 
   // Auto-refresh on 401 (once)
-  if (res.status === 401 && !_retried && authToken) {
+  if (res.status === 401 && !_retried && !isAuthEndpoint) {
     const newToken = await tryRefreshToken();
     if (newToken) {
       return apiFetch<T>(path, { ...options, token: newToken, _retried: true });
