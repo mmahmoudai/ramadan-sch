@@ -1,3 +1,4 @@
+import path from "path";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -18,7 +19,7 @@ import { errorHandler } from "./middleware/errorHandler";
 import { authLimiter, generalLimiter } from "./middleware/rateLimiter";
 import { startReminderCron } from "./jobs/reminderCron";
 
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const app = express();
 const PORT = process.env.PORT || 4000;

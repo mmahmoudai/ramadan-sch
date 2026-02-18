@@ -1,6 +1,7 @@
+import path from "path";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || "live.smtp.mailtrap.io",
