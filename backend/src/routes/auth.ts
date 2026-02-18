@@ -34,7 +34,7 @@ authRouter.post("/signup", async (req: Request, res: Response, next: NextFunctio
     });
     await user.save();
 
-    const accessToken = generateAccessToken({ userId: user._id.toString(), email: user.email });
+    const accessToken = generateAccessToken({ userId: user._id.toString(), email: user.email, role: user.role });
     const refreshTokenStr = generateRefreshToken();
     await RefreshToken.create({
       userId: user._id,
@@ -47,7 +47,7 @@ authRouter.post("/signup", async (req: Request, res: Response, next: NextFunctio
     res.status(201).json({
       accessToken,
       refreshToken: refreshTokenStr,
-      user: { id: user._id, email: user.email, displayName: user.displayName },
+      user: { id: user._id, email: user.email, displayName: user.displayName, role: user.role },
     });
   } catch (err) {
     next(err);
@@ -63,7 +63,7 @@ authRouter.post("/login", async (req: Request, res: Response, next: NextFunction
     const valid = await user.comparePassword(body.password);
     if (!valid) throw new AppError(401, "Invalid email or password");
 
-    const accessToken = generateAccessToken({ userId: user._id.toString(), email: user.email });
+    const accessToken = generateAccessToken({ userId: user._id.toString(), email: user.email, role: user.role });
     const refreshTokenStr = generateRefreshToken();
     const expiresAt = body.keepSignedIn
       ? new Date(Date.now() + 45 * 24 * 60 * 60 * 1000)
@@ -76,7 +76,7 @@ authRouter.post("/login", async (req: Request, res: Response, next: NextFunction
     res.json({
       accessToken,
       refreshToken: refreshTokenStr,
-      user: { id: user._id, email: user.email, displayName: user.displayName },
+      user: { id: user._id, email: user.email, displayName: user.displayName, role: user.role },
     });
   } catch (err) {
     next(err);
@@ -111,7 +111,7 @@ authRouter.post("/refresh", async (req: Request, res: Response, next: NextFuncti
 
     await stored.deleteOne();
 
-    const newAccessToken = generateAccessToken({ userId: user._id.toString(), email: user.email });
+    const newAccessToken = generateAccessToken({ userId: user._id.toString(), email: user.email, role: user.role });
     const newRefreshTokenStr = generateRefreshToken();
     await RefreshToken.create({ userId: user._id, token: newRefreshTokenStr, expiresAt: getRefreshTokenExpiry() });
 

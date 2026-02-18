@@ -8,6 +8,7 @@ const REFRESH_TOKEN_EXPIRY_DAYS = 45;
 export interface TokenPayload {
   userId: string;
   email: string;
+  role?: "user" | "admin";
 }
 
 export function generateAccessToken(payload: TokenPayload): string {

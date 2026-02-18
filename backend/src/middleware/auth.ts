@@ -7,6 +7,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-in-production";
 export interface AuthPayload {
   userId: string;
   email: string;
+  role?: "user" | "admin";
 }
 
 export interface AuthRequest extends Request {
@@ -29,4 +30,11 @@ export function requireAuth(req: AuthRequest, _res: Response, next: NextFunction
   } catch {
     return next(new AppError(401, "Invalid or expired token"));
   }
+}
+
+export function requireAdmin(req: AuthRequest, _res: Response, next: NextFunction) {
+  if (!req.user || req.user.role !== "admin") {
+    return next(new AppError(403, "Admin access required"));
+  }
+  next();
 }

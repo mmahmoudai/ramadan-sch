@@ -13,6 +13,7 @@ import { dashboardRouter } from "./routes/dashboard";
 import { commentsRouter } from "./routes/comments";
 import { visibilityRouter } from "./routes/visibility";
 import { reminderRouter } from "./routes/reminders";
+import { adminRouter } from "./routes/admin";
 import { errorHandler } from "./middleware/errorHandler";
 import { authLimiter, generalLimiter } from "./middleware/rateLimiter";
 import { startReminderCron } from "./jobs/reminderCron";
@@ -47,6 +48,7 @@ app.use("/dashboard", dashboardRouter);
 app.use("/comments", commentsRouter);
 app.use("/visibility", visibilityRouter);
 app.use("/reminders", reminderRouter);
+app.use("/admin", adminRouter);
 
 app.use(errorHandler);
 

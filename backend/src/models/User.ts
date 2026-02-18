@@ -5,6 +5,7 @@ export interface IUser extends Document {
   email: string;
   passwordHash: string;
   displayName: string;
+  role: "user" | "admin";
   bio: string;
   avatarUrl: string | null;
   personalInfo: Record<string, unknown>;
@@ -25,6 +26,7 @@ const userSchema = new Schema<IUser>(
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     passwordHash: { type: String, required: true },
     displayName: { type: String, required: true, trim: true },
+    role: { type: String, enum: ["user", "admin"], default: "user" },
     bio: { type: String, default: "" },
     avatarUrl: { type: String, default: null },
     personalInfo: { type: Schema.Types.Mixed, default: {} },

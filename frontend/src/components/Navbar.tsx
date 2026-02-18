@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { isLoggedIn, clearAuth, getUser } from "@/lib/auth";
+import { isLoggedIn, clearAuth, getUser, isAdmin } from "@/lib/auth";
 import { apiFetch } from "@/lib/api";
 import { useEffect, useState } from "react";
 
@@ -10,9 +10,11 @@ export default function Navbar() {
   const pathname = usePathname();
   const [loggedIn, setLoggedIn] = useState(false);
   const [userName, setUserName] = useState("");
+  const [admin, setAdmin] = useState(false);
 
   useEffect(() => {
     setLoggedIn(isLoggedIn());
+    setAdmin(isAdmin());
     const u = getUser();
     if (u) setUserName(u.displayName);
   }, [pathname]);
@@ -34,6 +36,7 @@ export default function Navbar() {
         { href: "/family", label: "Family" },
         { href: "/reports", label: "Reports" },
         { href: "/settings", label: "Settings" },
+        ...(admin ? [{ href: "/admin", label: "Admin" }] : []),
       ]
     : [];
 

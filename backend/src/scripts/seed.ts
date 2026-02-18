@@ -49,6 +49,18 @@ async function seed() {
   console.log("  ✓ Cleared all collections");
 
   // ─── Users ───
+  const adminUser = new User({
+    email: "admin@ramadantracker.app",
+    passwordHash: "admin123",
+    displayName: "Admin",
+    role: "admin",
+    bio: "System administrator",
+    language: "en",
+    timezoneIana: "Asia/Riyadh",
+    reminderEnabled: false,
+  });
+  await adminUser.save();
+
   const user1 = new User({
     email: "ahmad@example.com",
     passwordHash: "password123",
@@ -84,8 +96,9 @@ async function seed() {
   });
   await user3.save();
 
+  console.log("  ✓ Created 1 admin (admin@ramadantracker.app / admin123)");
   console.log("  ✓ Created 3 users (ahmad@example.com, fatima@example.com, omar@example.com)");
-  console.log("    Password for all: password123");
+  console.log("    Password for all regular users: password123");
 
   // ─── Daily Entries (7 days for user1, 5 for user2) ───
   const ibadahFields = [
@@ -351,6 +364,7 @@ async function seed() {
   // ─── Summary ───
   console.log("\n=== Seed Complete ===");
   console.log("\nTest accounts:");
+  console.log("  0. admin@ramadantracker.app / admin123   (Admin)");
   console.log("  1. ahmad@example.com  / password123  (English, 7 entries, 3 challenges)");
   console.log("  2. fatima@example.com / password123  (Arabic, 5 entries, 1 challenge)");
   console.log("  3. omar@example.com   / password123  (English, invited to family)");

@@ -14,7 +14,7 @@ export function getRefreshToken(): string | null {
   return localStorage.getItem(REFRESH_KEY);
 }
 
-export function getUser(): { id: string; email: string; displayName: string } | null {
+export function getUser(): { id: string; email: string; displayName: string; role?: string } | null {
   if (typeof window === "undefined") return null;
   const raw = localStorage.getItem(USER_KEY);
   if (!raw) return null;
@@ -25,7 +25,7 @@ export function getUser(): { id: string; email: string; displayName: string } | 
   }
 }
 
-export function setAuth(accessToken: string, refreshToken: string, user: { id: string; email: string; displayName: string }) {
+export function setAuth(accessToken: string, refreshToken: string, user: { id: string; email: string; displayName: string; role?: string }) {
   localStorage.setItem(TOKEN_KEY, accessToken);
   localStorage.setItem(REFRESH_KEY, refreshToken);
   localStorage.setItem(USER_KEY, JSON.stringify(user));
@@ -39,4 +39,9 @@ export function clearAuth() {
 
 export function isLoggedIn(): boolean {
   return !!getToken();
+}
+
+export function isAdmin(): boolean {
+  const u = getUser();
+  return u?.role === "admin";
 }
