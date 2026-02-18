@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ramadan Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Cairo:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="hero">
+        <p class="arabic-title">رمضان كريم</p>
+        <h1>Ramadan Tracker</h1>
+        <div class="top-controls">
+          <label for="tracker-date">Day</label>
+          <input id="tracker-date" type="date" />
+          <button id="reset-day" type="button">Reset Day</button>
+        </div>
+      </header>
+
+      <section class="grid top-grid">
+        <article class="card">
+          <h2 class="pill">العبادة</h2>
+          <ul class="check-list">
+            <li>
+              <label><input type="checkbox" data-field="ibadah_intention_quran" /> نية واضحة + جزء قرآن</label>
+            </li>
+            <li>
+              <label><input type="checkbox" data-field="ibadah_adhkar_focus" /> أذكار كاملة بتركيز</label>
+            </li>
+            <li>
+              <label><input type="checkbox" data-field="ibadah_two_rakaat" /> قيام ركعتين</label>
+            </li>
+            <li>
+              <label><input type="checkbox" data-field="ibadah_simple_charity" /> صدقة بسيطة</label>
+            </li>
+            <li>
+              <label><input type="checkbox" data-field="ibadah_tafsir_page" /> قراءة تفسير صفحة</label>
+            </li>
+            <li>
+              <label><input type="checkbox" data-field="ibadah_istighfar_100" /> استغفار 100 مرة</label>
+            </li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <h2 class="pill">Challenge of the Day</h2>
+          <textarea
+            rows="7"
+            placeholder="Set one focused challenge for today..."
+            data-field="daily_challenge"
+          ></textarea>
+        </article>
+
+        <article class="card">
+          <h2 class="pill">Habits</h2>
+          <ul class="check-list right">
+            <li>
+              <label><input type="checkbox" data-field="habit_no_smoking" /> No Smoking</label>
+            </li>
+            <li>
+              <label><input type="checkbox" data-field="habit_walk" /> Sporty Walk</label>
+            </li>
+            <li>
+              <label><input type="checkbox" data-field="habit_no_sugar" /> No Sugar</label>
+            </li>
+            <li>
+              <label><input type="checkbox" data-field="habit_healthy_food" /> Healthy Food</label>
+            </li>
+            <li>
+              <label><input type="checkbox" data-field="habit_water" /> Drinking Water</label>
+            </li>
+          </ul>
+        </article>
+      </section>
+
+      <section class="card salah-card">
+        <h2 class="pill">Salah Tracker</h2>
+        <div class="salah-grid">
+          <article class="salah-item">
+            <h3>fajr</h3>
+            <div class="dot-row">
+              <label><input type="checkbox" data-field="fajr_1" /><span></span></label>
+              <label><input type="checkbox" data-field="fajr_2" /><span></span></label>
+              <label><input type="checkbox" data-field="fajr_3" /><span></span></label>
+            </div>
+          </article>
+          <article class="salah-item">
+            <h3>dhuhr</h3>
+            <div class="dot-row">
+              <label><input type="checkbox" data-field="dhuhr_1" /><span></span></label>
+              <label><input type="checkbox" data-field="dhuhr_2" /><span></span></label>
+              <label><input type="checkbox" data-field="dhuhr_3" /><span></span></label>
+            </div>
+          </article>
+          <article class="salah-item">
+            <h3>asr</h3>
+            <div class="dot-row">
+              <label><input type="checkbox" data-field="asr_1" /><span></span></label>
+              <label><input type="checkbox" data-field="asr_2" /><span></span></label>
+              <label><input type="checkbox" data-field="asr_3" /><span></span></label>
+            </div>
+          </article>
+          <article class="salah-item">
+            <h3>maghrib</h3>
+            <div class="dot-row">
+              <label><input type="checkbox" data-field="maghrib_1" /><span></span></label>
+              <label><input type="checkbox" data-field="maghrib_2" /><span></span></label>
+              <label><input type="checkbox" data-field="maghrib_3" /><span></span></label>
+            </div>
+          </article>
+          <article class="salah-item">
+            <h3>isha</h3>
+            <div class="dot-row">
+              <label><input type="checkbox" data-field="isha_1" /><span></span></label>
+              <label><input type="checkbox" data-field="isha_2" /><span></span></label>
+              <label><input type="checkbox" data-field="isha_3" /><span></span></label>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="grid middle-grid">
+        <article class="card">
+          <h2 class="pill">Alhamdulillah for</h2>
+          <textarea
+            rows="5"
+            placeholder="Write what you are grateful for..."
+            data-field="gratitude"
+          ></textarea>
+        </article>
+
+        <article class="card mood-card">
+          <h2 class="pill">Mood Tracker</h2>
+          <div class="mood-list">
+            <label class="mood-option">
+              <input type="radio" name="mood" value="happy" data-field="mood" />
+              <span>😊</span>
+            </label>
+            <label class="mood-option">
+              <input type="radio" name="mood" value="okay" data-field="mood" />
+              <span>🙂</span>
+            </label>
+            <label class="mood-option">
+              <input type="radio" name="mood" value="sad" data-field="mood" />
+              <span>🙁</span>
+            </label>
+            <label class="mood-option">
+              <input type="radio" name="mood" value="great" data-field="mood" />
+              <span>😄</span>
+            </label>
+          </div>
+        </article>
+      </section>
+
+      <section class="card">
+        <h2 class="pill">Sunnah Tracker</h2>
+        <div class="sunnah-grid">
+          <ul class="check-list">
+            <li>
+              <label><input type="checkbox" data-field="sunnah_morning_dhikr" /> Morning dhikr</label>
+            </li>
+            <li>
+              <label><input type="checkbox" data-field="sunnah_evening_dhikr" /> Evening dhikr</label>
+            </li>
+            <li>
+              <label><input type="checkbox" data-field="sunnah_duha" /> Salah dhuha</label>
+            </li>
+            <li>
+              <label><input type="checkbox" data-field="sunnah_tahajjud" /> Salah tahajjud</label>
+            </li>
+            <li>
+              <label><input type="checkbox" data-field="sunnah_tarawih" /> Salah tarawih</label>
+            </li>
+          </ul>
+          <ul class="check-list">
+            <li>
+              <label><input type="checkbox" data-field="sunnah_quran" /> Read Qur'an</label>
+            </li>
+            <li>
+              <label><input type="checkbox" data-field="sunnah_qabliyah_fajr" /> Qabliyah fajr</label>
+            </li>
+            <li>
+              <label><input type="checkbox" data-field="sunnah_qabliyah_dhuhr" /> Qabliyah dhuhr</label>
+            </li>
+            <li>
+              <label><input type="checkbox" data-field="sunnah_qabliyah_maghrib" /> Qabliyah maghrib</label>
+            </li>
+            <li>
+              <label><input type="checkbox" data-field="sunnah_qabliyah_isha" /> Qabliyah isha</label>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="grid bottom-grid">
+        <article class="card">
+          <h2 class="pill">Qur'an Tracker</h2>
+          <textarea
+            rows="5"
+            placeholder="Ayah, page, or reflection..."
+            data-field="quran_tracker"
+          ></textarea>
+        </article>
+        <article class="card">
+          <h2 class="pill">Hadith of the Day</h2>
+          <textarea
+            rows="5"
+            placeholder="Write one hadith and your takeaway..."
+            data-field="hadith_day"
+          ></textarea>
+        </article>
+      </section>
+
+      <footer class="footer">
+        <p id="progress-text">0 completed items</p>
+      </footer>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
