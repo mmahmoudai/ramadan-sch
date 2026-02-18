@@ -50,7 +50,7 @@ async function seed() {
 
   // ─── Users ───
   const adminUser = new User({
-    email: "admin@ramadantracker.app",
+    email: "admin@ramadantracker.club",
     passwordHash: "admin123",
     displayName: "Admin",
     role: "admin",
