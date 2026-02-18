@@ -1,20 +1,31 @@
 import path from "path";
-import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || "live.smtp.mailtrap.io",
-  port: parseInt(process.env.SMTP_PORT || "587"),
-  secure: false,
-  auth: {
-    user: process.env.SMTP_USER || "apismtp@mailtrap.io",
-    pass: process.env.SMTP_PASS || "",
-  },
-});
-
-const FROM = process.env.EMAIL_FROM || "noreply@ramadantracker.club";
+const MAILTRAP_TOKEN = process.env.MAILTRAP_TOKEN || process.env.SMTP_PASS || "";
+const FROM_EMAIL = process.env.EMAIL_FROM || "noreply@ramadantracker.club";
+const FROM_NAME = "Ramadan Tracker";
 const FRONTEND = process.env.FRONTEND_URL || "https://ramadantracker.club";
+
+async function sendMail(to: string, subject: string, html: string): Promise<void> {
+  const res = await fetch("https://send.api.mailtrap.io/api/send", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${MAILTRAP_TOKEN}`,
+    },
+    body: JSON.stringify({
+      from: { email: FROM_EMAIL, name: FROM_NAME },
+      to: [{ email: to }],
+      subject,
+      html,
+    }),
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Mailtrap API error ${res.status}: ${body}`);
+  }
+}
 
 function wrap(body: string): string {
   return `<!DOCTYPE html>
@@ -59,12 +70,7 @@ export async function sendWelcomeEmail(email: string, displayName: string): Prom
     <p style="font-size:14px;color:#888;">Ramadan Kareem! رمضان كريم</p>
   `);
 
-  await transporter.sendMail({
-    from: `"Ramadan Tracker" <${FROM}>`,
-    to: email,
-    subject: "Welcome to Ramadan Tracker! 🌙",
-    html,
-  });
+  await sendMail(email, "Welcome to Ramadan Tracker! 🌙", html);
   console.log(`[MAIL] Welcome email sent to ${email}`);
 }
 
@@ -91,12 +97,7 @@ export async function sendFamilyInviteEmail(
     </div>
   `);
 
-  await transporter.sendMail({
-    from: `"Ramadan Tracker" <${FROM}>`,
-    to: inviteeEmail,
-    subject: `${inviterName} invited you to "${groupName}" on Ramadan Tracker`,
-    html,
-  });
+  await sendMail(inviteeEmail, `${inviterName} invited you to "${groupName}" on Ramadan Tracker`, html);
   console.log(`[MAIL] Family invite sent to ${inviteeEmail}`);
 }
 
@@ -123,12 +124,7 @@ export async function sendFamilyInviteConfirmation(
     </div>
   `);
 
-  await transporter.sendMail({
-    from: `"Ramadan Tracker" <${FROM}>`,
-    to: inviterEmail,
-    subject: `You invited ${inviteeName} to "${groupName}"`,
-    html,
-  });
+  await sendMail(inviterEmail, `You invited ${inviteeName} to "${groupName}"`, html);
   console.log(`[MAIL] Family invite confirmation sent to ${inviterEmail}`);
 }
 
@@ -172,12 +168,7 @@ export async function sendDailyReminderEmail(
 
   const html = wrap(body);
 
-  await transporter.sendMail({
-    from: `"Ramadan Tracker" <${FROM}>`,
-    to: email,
-    subject,
-    html,
-  });
+  await sendMail(email, subject, html);
   console.log(`[MAIL] Daily reminder sent to ${email}`);
 }
 
@@ -202,13 +193,6 @@ export async function sendPasswordResetEmail(
     <p style="font-size:13px;color:#999;">If you didn't request this, you can safely ignore this email.</p>
   `);
 
-  await transporter.sendMail({
-    from: `"Ramadan Tracker" <${FROM}>`,
-    to: email,
-    subject: "Reset your Ramadan Tracker password",
-    html,
-  });
+  await sendMail(email, "Reset your Ramadan Tracker password", html);
   console.log(`[MAIL] Password reset email sent to ${email}`);
 }
-
-export { transporter };
