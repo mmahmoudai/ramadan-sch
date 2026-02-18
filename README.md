@@ -42,10 +42,18 @@ A comprehensive full-stack web application for tracking daily worship, habits, a
 - Delivery metrics dashboard
 - Skip tracking for incomplete days
 
-### 🔒 Security Features
+### �️ Admin Dashboard
+- Multi-level authentication (user/admin roles)
+- View total registered users and platform stats
+- Search, paginate, promote/demote users
+- Delete users and all associated data
+- Audit log viewer
+
+### �🔒 Security Features
 - JWT authentication with refresh tokens
-- Password hashing (bcrypt)
-- Rate limiting on endpoints
+- Role-based access control (user/admin)
+- Password hashing (bcrypt, 12 rounds)
+- Rate limiting on endpoints (auth: 20/15min, general: 100/min)
 - CORS protection
 - Input validation (Zod)
 - Permanent daily locks at midnight
@@ -142,6 +150,7 @@ A comprehensive full-stack web application for tracking daily worship, habits, a
 
 ### Test Accounts
 After seeding, you can use these accounts:
+- **admin@ramadantracker.app** / admin123 (Admin — full user management)
 - **ahmad@example.com** / password123 (English, 7 entries, 3 challenges)
 - **fatima@example.com** / password123 (Arabic, 5 entries, 1 challenge)
 - **omar@example.com** / password123 (English, invited to family)
@@ -153,7 +162,7 @@ ramdan-sch/
 ├── backend/                 # Express.js API
 │   ├── src/
 │   │   ├── models/         # MongoDB models
-│   │   ├── routes/         # API routes
+│   │   ├── routes/         # API routes (auth, entries, challenges, admin, etc.)
 │   │   ├── middleware/     # Auth, error handling, rate limiting
 │   │   ├── utils/          # Helper functions
 │   │   ├── jobs/           # Cron jobs (reminders)
@@ -162,7 +171,7 @@ ramdan-sch/
 │   └── package.json
 ├── frontend/               # Next.js app
 │   ├── src/
-│   │   ├── app/           # App router pages
+│   │   ├── app/           # App router pages (tracker, dashboard, admin, etc.)
 │   │   ├── components/    # Reusable components
 │   │   └── lib/           # Utilities, API, auth, i18n
 │   └── package.json
@@ -220,6 +229,13 @@ npx vitest src/tests/integration/
 - `POST /families/:id/invite` - Invite member
 - `POST /families/:id/join` - Join with invite code
 
+### Admin (requires admin role)
+- `GET /admin/stats` - Platform overview stats
+- `GET /admin/users` - List all users (paginated, searchable)
+- `PATCH /admin/users/:id/role` - Promote/demote user
+- `DELETE /admin/users/:id` - Delete user and all data
+- `GET /admin/audit` - Recent audit logs
+
 ## 🌍 Internationalization
 
 The app supports Arabic and English with:
@@ -249,11 +265,17 @@ EMAIL_FROM=noreply@ramadantracker.app
 
 ## 🚀 Deployment
 
+The app is deployed on a DigitalOcean Ubuntu VPS using PM2 and Nginx.
+
+### Live Server
+- **Frontend**: http://64.225.117.214
+- **API**: http://64.225.117.214:4000
+
 ### Environment Variables
 **Backend (.env)**:
 ```env
 PORT=4000
-FRONTEND_URL=https://yourdomain.com
+FRONTEND_URL=http://your-server-ip
 NODE_ENV=production
 JWT_SECRET=your-secure-secret
 MONGO_URI=mongodb://localhost:27017/ramadan_tracker
@@ -261,12 +283,22 @@ MONGO_URI=mongodb://localhost:27017/ramadan_tracker
 
 **Frontend (.env.local)**:
 ```env
-NEXT_PUBLIC_API_URL=https://api.yourdomain.com
+NEXT_PUBLIC_API_URL=http://your-server-ip:4000
 ```
 
-### Docker Deployment
-```dockerfile
-# Add Dockerfile configuration here
+### VPS Deployment
+See [DEPLOYMENT.md](DEPLOYMENT.md) for full step-by-step instructions, or use the automated setup script:
+```bash
+ssh root@your-server-ip
+curl -fsSL https://raw.githubusercontent.com/mmahmoudai/ramadan-sch/main/deploy/setup-vps.sh -o setup.sh
+chmod +x setup.sh && ./setup.sh
+```
+
+### PM2 Process Management
+```bash
+pm2 status                    # Check services
+pm2 restart all               # Restart all
+pm2 logs ramadan-tracker-api  # View API logs
 ```
 
 ## 🤝 Contributing
