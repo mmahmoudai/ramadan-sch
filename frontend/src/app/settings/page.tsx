@@ -4,9 +4,11 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api";
 import { getToken, isLoggedIn } from "@/lib/auth";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function SettingsPage() {
   const router = useRouter();
+  const { locale, setLocale, t } = useLanguage();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -18,7 +20,7 @@ export default function SettingsPage() {
   const [bio, setBio] = useState("");
 
   // Settings fields
-  const [language, setLanguage] = useState("en");
+  const [language, setLanguageState] = useState("en");
   const [timezoneIana, setTimezoneIana] = useState("");
   const [timezoneSource, setTimezoneSource] = useState("auto");
   const [reminderEnabled, setReminderEnabled] = useState(true);
@@ -36,7 +38,9 @@ export default function SettingsPage() {
       setUser(u);
       setDisplayName(u.displayName || "");
       setBio(u.bio || "");
-      setLanguage(u.language || "en");
+      const userLanguage = u.language || "en";
+      setLanguageState(userLanguage);
+      setLocale(userLanguage as "en" | "ar");
       setTimezoneIana(u.timezoneIana || Intl.DateTimeFormat().resolvedOptions().timeZone);
       setTimezoneSource(u.timezoneSource || "auto");
       setReminderEnabled(u.reminderEnabled !== false);
@@ -73,6 +77,7 @@ export default function SettingsPage() {
         token,
         body: JSON.stringify({ language, timezoneIana, timezoneSource, reminderEnabled }),
       });
+      setLocale(language as "en" | "ar");
       setMessage("Settings saved!");
     } catch (err: any) {
       setError(err.message);
@@ -81,11 +86,11 @@ export default function SettingsPage() {
     }
   };
 
-  if (loading) return <div className="text-center py-20 text-lg">Loading...</div>;
+  if (loading) return <div className="text-center py-20 text-lg">{t("common.loading")}</div>;
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <h1 className="text-3xl font-extrabold">Settings</h1>
+      <h1 className="text-3xl font-extrabold">{t("settings.title")}</h1>
 
       {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm">{error}</div>}
       {message && <div className="bg-green-50 border border-green-200 text-green-700 rounded-lg p-3 text-sm">{message}</div>}
@@ -95,36 +100,34 @@ export default function SettingsPage() {
         <h2 className="font-bold text-lg mb-4">Profile</h2>
         <div className="space-y-3">
           <div>
-            <label className="block text-sm font-semibold mb-1">Display Name</label>
+            <label className="block text-sm font-semibold mb-1">{t("auth.displayName")}</label>
             <input type="text" value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="w-full border-2 border-line rounded-lg px-3 py-2" />
           </div>
           <div>
-            <label className="block text-sm font-semibold mb-1">Bio</label>
+            <label className="block text-sm font-semibold mb-1">{t("settings.bio")}</label>
             <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={3} className="w-full border-2 border-line rounded-lg px-3 py-2" />
           </div>
           <div>
-            <label className="block text-sm font-semibold mb-1">Email</label>
+            <label className="block text-sm font-semibold mb-1">{t("settings.reminders")}</label>
             <input type="email" value={user?.email || ""} disabled className="w-full border-2 border-gray-200 rounded-lg px-3 py-2 bg-gray-50 text-gray-500" />
           </div>
-          <button onClick={saveProfile} disabled={saving} className="bg-ink text-white px-6 py-2 rounded-lg font-bold text-sm hover:opacity-90 disabled:opacity-50">
-            {saving ? "Saving..." : "Save Profile"}
-          </button>
+          <button onClick={saveProfile} disabled={saving} className="bg-ink text-white px-4 py-2 rounded-lg font-semibold hover:bg-ink/80 disabled:opacity-50">{t("common.save")}</button>
         </div>
       </div>
 
       {/* Settings */}
       <div className="border-2 border-line rounded-xl bg-card p-5">
-        <h2 className="font-bold text-lg mb-4">App Settings</h2>
+        <h2 className="font-bold text-lg mb-4">{t("settings.appSettings")}</h2>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold mb-1">Language</label>
-            <select value={language} onChange={(e) => setLanguage(e.target.value)} className="w-full border-2 border-line rounded-lg px-3 py-2">
+            <label className="block text-sm font-semibold mb-1">{t("settings.language")}</label>
+            <select value={language} onChange={(e) => setLanguageState(e.target.value)} className="w-full border-2 border-line rounded-lg px-3 py-2">
               <option value="en">English</option>
               <option value="ar">العربية (Arabic)</option>
             </select>
           </div>
           <div>
-            <label className="block text-sm font-semibold mb-1">Timezone Source</label>
+            <label className="block text-sm font-semibold mb-1">{t("settings.timezone")}</label>
             <div className="flex gap-4">
               <label className="flex items-center gap-2 text-sm cursor-pointer">
                 <input type="radio" name="tzSrc" checked={timezoneSource === "auto"} onChange={() => { setTimezoneSource("auto"); setTimezoneIana(Intl.DateTimeFormat().resolvedOptions().timeZone); }} /> Auto-detect
@@ -135,18 +138,16 @@ export default function SettingsPage() {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-semibold mb-1">Timezone</label>
+            <label className="block text-sm font-semibold mb-1">{t("settings.timezoneIana")}</label>
             <input type="text" value={timezoneIana} onChange={(e) => setTimezoneIana(e.target.value)} disabled={timezoneSource === "auto"} className="w-full border-2 border-line rounded-lg px-3 py-2 disabled:bg-gray-50 disabled:text-gray-500" />
           </div>
           <div>
             <label className="flex items-center gap-2 text-sm cursor-pointer">
               <input type="checkbox" checked={reminderEnabled} onChange={(e) => setReminderEnabled(e.target.checked)} className="accent-accent w-4 h-4" />
-              <span className="font-semibold">Enable email reminders at 9:00 PM</span>
+              <span className="font-semibold">{t("settings.reminderEnabled")}</span>
             </label>
           </div>
-          <button onClick={saveSettings} disabled={saving} className="bg-ink text-white px-6 py-2 rounded-lg font-bold text-sm hover:opacity-90 disabled:opacity-50">
-            {saving ? "Saving..." : "Save Settings"}
-          </button>
+          <button onClick={saveSettings} disabled={saving} className="bg-ink text-white px-4 py-2 rounded-lg font-semibold hover:bg-ink/80 disabled:opacity-50">{t("common.save")}</button>
         </div>
       </div>
       {/* Reminder Metrics */}

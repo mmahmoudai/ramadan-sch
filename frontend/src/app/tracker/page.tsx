@@ -4,38 +4,39 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api";
 import { getToken, isLoggedIn } from "@/lib/auth";
-import { formatHijriDate, type Locale } from "@/lib/i18n";
+import { formatHijriDate } from "@/lib/i18n";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const IBADAH_FIELDS = [
-  { key: "ibadah_intention_quran", label: "نية واضحة + جزء قرآن" },
-  { key: "ibadah_adhkar_focus", label: "أذكار كاملة بتركيز" },
-  { key: "ibadah_two_rakaat", label: "قيام ركعتين" },
-  { key: "ibadah_simple_charity", label: "صدقة بسيطة" },
-  { key: "ibadah_tafsir_page", label: "قراءة تفسير صفحة" },
-  { key: "ibadah_istighfar_100", label: "استغفار 100 مرة" },
+  { key: "ibadah_intention_quran", labelKey: "tracker.ibadah_intention_quran" },
+  { key: "ibadah_adhkar_focus", labelKey: "tracker.ibadah_adhkar_focus" },
+  { key: "ibadah_two_rakaat", labelKey: "tracker.ibadah_two_rakaat" },
+  { key: "ibadah_simple_charity", labelKey: "tracker.ibadah_simple_charity" },
+  { key: "ibadah_tafsir_page", labelKey: "tracker.ibadah_tafsir_page" },
+  { key: "ibadah_istighfar_100", labelKey: "tracker.ibadah_istighfar_100" },
 ];
 
 const HABIT_FIELDS = [
-  { key: "habit_no_smoking", label: "No Smoking" },
-  { key: "habit_walk", label: "One Hour Walk" },
-  { key: "habit_no_sugar", label: "No Sugar" },
-  { key: "habit_healthy_food", label: "Healthy Food" },
-  { key: "habit_water", label: "Drinking Water" },
+  { key: "habit_no_smoking", labelKey: "tracker.habit_no_smoking" },
+  { key: "habit_walk", labelKey: "tracker.habit_walk" },
+  { key: "habit_no_sugar", labelKey: "tracker.habit_no_sugar" },
+  { key: "habit_healthy_food", labelKey: "tracker.habit_healthy_food" },
+  { key: "habit_water", labelKey: "tracker.habit_water" },
 ];
 
 const SALAH_NAMES = ["fajr", "dhuhr", "asr", "maghrib", "isha"];
 
 const SUNNAH_FIELDS = [
-  { key: "sunnah_morning_dhikr", label: "Morning dhikr" },
-  { key: "sunnah_evening_dhikr", label: "Evening dhikr" },
-  { key: "sunnah_duha", label: "Salah dhuha" },
-  { key: "sunnah_tahajjud", label: "Salah tahajjud" },
-  { key: "sunnah_tarawih", label: "Salah tarawih" },
-  { key: "sunnah_quran", label: "Read Qur'an" },
-  { key: "sunnah_qabliyah_fajr", label: "Qabliyah fajr" },
-  { key: "sunnah_qabliyah_dhuhr", label: "Qabliyah dhuhr" },
-  { key: "sunnah_qabliyah_maghrib", label: "Qabliyah maghrib" },
-  { key: "sunnah_qabliyah_isha", label: "Qabliyah isha" },
+  { key: "sunnah_morning_dhikr", labelKey: "tracker.sunnah_morning_dhikr" },
+  { key: "sunnah_evening_dhikr", labelKey: "tracker.sunnah_evening_dhikr" },
+  { key: "sunnah_duha", labelKey: "tracker.sunnah_duha" },
+  { key: "sunnah_tahajjud", labelKey: "tracker.sunnah_tahajjud" },
+  { key: "sunnah_tarawih", labelKey: "tracker.sunnah_tarawih" },
+  { key: "sunnah_quran", labelKey: "tracker.sunnah_quran" },
+  { key: "sunnah_qabliyah_fajr", labelKey: "tracker.sunnah_qabliyah_fajr" },
+  { key: "sunnah_qabliyah_dhuhr", labelKey: "tracker.sunnah_qabliyah_dhuhr" },
+  { key: "sunnah_qabliyah_maghrib", labelKey: "tracker.sunnah_qabliyah_maghrib" },
+  { key: "sunnah_qabliyah_isha", labelKey: "tracker.sunnah_qabliyah_isha" },
 ];
 
 const MOODS = [
@@ -47,6 +48,7 @@ const MOODS = [
 
 export default function TrackerPage() {
   const router = useRouter();
+  const { locale, t } = useLanguage();
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [fields, setFields] = useState<Record<string, any>>({});
   const [locked, setLocked] = useState(false);
@@ -70,7 +72,6 @@ export default function TrackerPage() {
         }
         setFields(fieldMap);
         setLocked(data.entry.status === "locked");
-        const locale = getCurrentLocale();
         setHijriInfo(formatHijriDate(data.entry.hijriDay, data.entry.hijriMonth, data.entry.hijriYear, locale));
       } else {
         setFields({});
@@ -101,7 +102,6 @@ export default function TrackerPage() {
         body: JSON.stringify({ fields: fieldArr }),
       });
       if (data.entry) {
-        const locale = getCurrentLocale();
         setHijriInfo(formatHijriDate(data.entry.hijriDay, data.entry.hijriMonth, data.entry.hijriYear, locale));
         setLocked(data.entry.status === "locked");
       }
@@ -110,7 +110,7 @@ export default function TrackerPage() {
     } finally {
       setSaving(false);
     }
-  }, [date, locked]);
+  }, [date, locked, locale]);
 
   const toggleField = (key: string) => {
     if (locked) return;
@@ -134,47 +134,40 @@ export default function TrackerPage() {
     saveEntry(updated);
   };
 
-  const getCurrentLocale = (): Locale => {
-    if (typeof window !== "undefined") {
-      const htmlLang = document.documentElement.lang;
-      return htmlLang === "ar" ? "ar" : "en";
-    }
-    return "en";
-  };
 
   const completedCount = Object.values(fields).filter((v) => v === true).length;
   const textCount = Object.entries(fields).filter(([k, v]) => typeof v === "string" && v.trim().length > 0 && k !== "mood").length;
   const moodCount = fields.mood ? 1 : 0;
   const totalCompleted = completedCount + textCount + moodCount;
 
-  if (!loaded) return <div className="text-center py-20 text-lg">Loading...</div>;
+  if (!loaded) return <div className="text-center py-20 text-lg">{t("tracker.loading")}</div>;
 
   return (
     <div className="space-y-4">
       {/* Header */}
       <div className="border-2 border-line rounded-2xl bg-[repeating-linear-gradient(45deg,rgba(255,255,255,0.85),rgba(255,255,255,0.85)_10px,rgba(240,240,240,0.95)_10px,rgba(240,240,240,0.95)_20px)] p-4 text-center">
         <p className="font-ruqaa text-3xl md:text-5xl">رمضان كريم</p>
-        <h1 className="text-2xl md:text-4xl font-extrabold">Ramadan Tracker</h1>
+        <h1 className="text-2xl md:text-4xl font-extrabold">{t("app.title")}</h1>
         {hijriInfo && <p className="text-accent font-semibold mt-1">{hijriInfo}</p>}
         <div className="mt-3 inline-flex items-center gap-3 bg-white border-2 border-line rounded-full px-4 py-2">
-          <label className="font-semibold text-sm">Day</label>
+          <label className="font-semibold text-sm">{t("tracker.day")}</label>
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="border border-line rounded-lg px-2 py-1 text-sm" />
         </div>
-        {locked && <div className="mt-2 bg-red-100 text-red-700 rounded-lg px-4 py-2 font-semibold text-sm inline-block">🔒 This entry is permanently locked</div>}
-        {saving && <div className="mt-2 text-xs text-gray-500">Saving...</div>}
+        {locked && <div className="mt-2 bg-red-100 text-red-700 rounded-lg px-4 py-2 font-semibold text-sm inline-block">{t("tracker.permanentlyLocked")}</div>}
+        {saving && <div className="mt-2 text-xs text-gray-500">{t("tracker.saving")}</div>}
       </div>
 
       {/* Top Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Ibadah */}
         <div className="border-2 border-line rounded-xl bg-card p-4 pt-2">
-          <h2 className="bg-ink text-white rounded-full px-4 py-1 text-center font-bold text-lg -mt-6 mx-auto w-fit">العبادة</h2>
+          <h2 className="bg-ink text-white rounded-full px-4 py-1 text-center font-bold text-lg -mt-6 mx-auto w-fit">{t("tracker.ibadah")}</h2>
           <ul className="mt-3 space-y-1.5">
             {IBADAH_FIELDS.map((f) => (
               <li key={f.key}>
                 <label className="flex items-center gap-2 cursor-pointer text-base">
                   <input type="checkbox" checked={!!fields[f.key]} onChange={() => toggleField(f.key)} disabled={locked} className="w-4 h-4 accent-accent" />
-                  {f.label}
+                  {t(f.labelKey)}
                 </label>
               </li>
             ))}
@@ -183,19 +176,19 @@ export default function TrackerPage() {
 
         {/* Challenge */}
         <div className="border-2 border-line rounded-xl bg-card p-4 pt-2">
-          <h2 className="bg-ink text-white rounded-full px-4 py-1 text-center font-bold text-lg -mt-6 mx-auto w-fit">Challenge of the Day</h2>
-          <textarea rows={7} placeholder="Set one focused challenge for today..." value={fields.daily_challenge || ""} onChange={(e) => setTextField("daily_challenge", e.target.value)} onBlur={onTextBlur} disabled={locked} className="mt-3 w-full border border-line rounded-lg p-3 resize-vertical bg-white text-sm disabled:opacity-50" />
+          <h2 className="bg-ink text-white rounded-full px-4 py-1 text-center font-bold text-lg -mt-6 mx-auto w-fit">{t("tracker.challenge")}</h2>
+          <textarea rows={7} placeholder={t("tracker.challengePlaceholder")} value={fields.daily_challenge || ""} onChange={(e) => setTextField("daily_challenge", e.target.value)} onBlur={onTextBlur} disabled={locked} className="mt-3 w-full border border-line rounded-lg p-3 resize-vertical bg-white text-sm disabled:opacity-50" />
         </div>
 
         {/* Habits */}
         <div className="border-2 border-line rounded-xl bg-card p-4 pt-2">
-          <h2 className="bg-ink text-white rounded-full px-4 py-1 text-center font-bold text-lg -mt-6 mx-auto w-fit">Habits</h2>
+          <h2 className="bg-ink text-white rounded-full px-4 py-1 text-center font-bold text-lg -mt-6 mx-auto w-fit">{t("tracker.habits")}</h2>
           <ul className="mt-3 space-y-1.5">
             {HABIT_FIELDS.map((f) => (
               <li key={f.key}>
                 <label className="flex items-center gap-2 cursor-pointer text-base">
                   <input type="checkbox" checked={!!fields[f.key]} onChange={() => toggleField(f.key)} disabled={locked} className="w-4 h-4 accent-accent" />
-                  {f.label}
+                  {t(f.labelKey)}
                 </label>
               </li>
             ))}
@@ -205,11 +198,11 @@ export default function TrackerPage() {
 
       {/* Salah */}
       <div className="border-2 border-line rounded-xl bg-card p-4 pt-2">
-        <h2 className="bg-ink text-white rounded-full px-4 py-1 text-center font-bold text-lg -mt-6 mx-auto w-fit">Salah Tracker</h2>
+        <h2 className="bg-ink text-white rounded-full px-4 py-1 text-center font-bold text-lg -mt-6 mx-auto w-fit">{t("tracker.salah")}</h2>
         <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
           {SALAH_NAMES.map((s) => (
             <div key={s} className="border border-gray-300 rounded-xl p-3 text-center bg-white">
-              <h3 className="font-bold text-lg capitalize">{s}</h3>
+              <h3 className="font-bold text-lg">{t(`tracker.salah.${s}`)}</h3>
               <div className="flex justify-center gap-2 mt-2">
                 {[1, 2, 3].map((n) => {
                   const key = `${s}_${n}`;
@@ -229,11 +222,11 @@ export default function TrackerPage() {
       {/* Gratitude + Mood */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="border-2 border-line rounded-xl bg-card p-4 pt-2">
-          <h2 className="bg-ink text-white rounded-full px-4 py-1 text-center font-bold text-lg -mt-6 mx-auto w-fit">Alhamdulillah for</h2>
-          <textarea rows={5} placeholder="Write what you are grateful for..." value={fields.gratitude || ""} onChange={(e) => setTextField("gratitude", e.target.value)} onBlur={onTextBlur} disabled={locked} className="mt-3 w-full border border-line rounded-lg p-3 resize-vertical bg-white text-sm disabled:opacity-50" />
+          <h2 className="bg-ink text-white rounded-full px-4 py-1 text-center font-bold text-lg -mt-6 mx-auto w-fit">{t("tracker.gratitude")}</h2>
+          <textarea rows={5} placeholder={t("tracker.gratitudePlaceholder")} value={fields.gratitude || ""} onChange={(e) => setTextField("gratitude", e.target.value)} onBlur={onTextBlur} disabled={locked} className="mt-3 w-full border border-line rounded-lg p-3 resize-vertical bg-white text-sm disabled:opacity-50" />
         </div>
         <div className="border-2 border-line rounded-xl bg-card p-4 pt-2">
-          <h2 className="bg-ink text-white rounded-full px-4 py-1 text-center font-bold text-lg -mt-6 mx-auto w-fit">Mood Tracker</h2>
+          <h2 className="bg-ink text-white rounded-full px-4 py-1 text-center font-bold text-lg -mt-6 mx-auto w-fit">{t("tracker.mood")}</h2>
           <div className="mt-3 grid grid-cols-4 gap-3">
             {MOODS.map((m) => (
               <label key={m.value} className={`border-2 rounded-xl p-3 text-center cursor-pointer text-3xl transition ${fields.mood === m.value ? "border-accent shadow-inner" : "border-line bg-white"}`}>
@@ -247,7 +240,7 @@ export default function TrackerPage() {
 
       {/* Sunnah */}
       <div className="border-2 border-line rounded-xl bg-card p-4 pt-2">
-        <h2 className="bg-ink text-white rounded-full px-4 py-1 text-center font-bold text-lg -mt-6 mx-auto w-fit">Sunnah Tracker</h2>
+        <h2 className="bg-ink text-white rounded-full px-4 py-1 text-center font-bold text-lg -mt-6 mx-auto w-fit">{t("tracker.sunnah")}</h2>
         <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
           {[SUNNAH_FIELDS.slice(0, 5), SUNNAH_FIELDS.slice(5)].map((col, ci) => (
             <ul key={ci} className="space-y-1.5">
@@ -255,7 +248,7 @@ export default function TrackerPage() {
                 <li key={f.key}>
                   <label className="flex items-center gap-2 cursor-pointer text-base">
                     <input type="checkbox" checked={!!fields[f.key]} onChange={() => toggleField(f.key)} disabled={locked} className="w-4 h-4 accent-accent" />
-                    {f.label}
+                    {t(f.labelKey)}
                   </label>
                 </li>
               ))}
@@ -267,18 +260,18 @@ export default function TrackerPage() {
       {/* Quran + Hadith */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="border-2 border-line rounded-xl bg-card p-4 pt-2">
-          <h2 className="bg-ink text-white rounded-full px-4 py-1 text-center font-bold text-lg -mt-6 mx-auto w-fit">Qur&apos;an Tracker</h2>
-          <textarea rows={5} placeholder="Ayah, page, or reflection..." value={fields.quran_tracker || ""} onChange={(e) => setTextField("quran_tracker", e.target.value)} onBlur={onTextBlur} disabled={locked} className="mt-3 w-full border border-line rounded-lg p-3 resize-vertical bg-white text-sm disabled:opacity-50" />
+          <h2 className="bg-ink text-white rounded-full px-4 py-1 text-center font-bold text-lg -mt-6 mx-auto w-fit">{t("tracker.quran")}</h2>
+          <textarea rows={5} placeholder={t("tracker.quranPlaceholder")} value={fields.quran_tracker || ""} onChange={(e) => setTextField("quran_tracker", e.target.value)} onBlur={onTextBlur} disabled={locked} className="mt-3 w-full border border-line rounded-lg p-3 resize-vertical bg-white text-sm disabled:opacity-50" />
         </div>
         <div className="border-2 border-line rounded-xl bg-card p-4 pt-2">
-          <h2 className="bg-ink text-white rounded-full px-4 py-1 text-center font-bold text-lg -mt-6 mx-auto w-fit">Hadith of the Day</h2>
-          <textarea rows={5} placeholder="Write one hadith and your takeaway..." value={fields.hadith_day || ""} onChange={(e) => setTextField("hadith_day", e.target.value)} onBlur={onTextBlur} disabled={locked} className="mt-3 w-full border border-line rounded-lg p-3 resize-vertical bg-white text-sm disabled:opacity-50" />
+          <h2 className="bg-ink text-white rounded-full px-4 py-1 text-center font-bold text-lg -mt-6 mx-auto w-fit">{t("tracker.hadith")}</h2>
+          <textarea rows={5} placeholder={t("tracker.hadithPlaceholder")} value={fields.hadith_day || ""} onChange={(e) => setTextField("hadith_day", e.target.value)} onBlur={onTextBlur} disabled={locked} className="mt-3 w-full border border-line rounded-lg p-3 resize-vertical bg-white text-sm disabled:opacity-50" />
         </div>
       </div>
 
       {/* Footer */}
       <div className="border-t-2 border-dashed border-gray-400 pt-3 text-center font-bold text-lg">
-        {totalCompleted} completed items
+        {totalCompleted} {t("tracker.completedItems")}
       </div>
     </div>
   );

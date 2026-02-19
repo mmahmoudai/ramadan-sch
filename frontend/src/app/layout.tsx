@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
+import ClientLayout from "@/components/ClientLayout";
 
 export const metadata: Metadata = {
   title: "Ramadan Tracker - Track Your Daily Worship & Habits",
@@ -19,12 +19,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" dir="ltr">
+    <html>
       <body className="min-h-screen bg-bg text-ink">
-        <Navbar />
-        <main className="mx-auto max-w-[1100px] w-[96vw] my-6 p-4">
+        <ClientLayout>
           {children}
-        </main>
+        </ClientLayout>
       </body>
     </html>
   );
