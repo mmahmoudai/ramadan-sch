@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import ClientLayout from "@/components/ClientLayout";
 
 export const metadata: Metadata = {
@@ -21,9 +22,11 @@ export default function RootLayout({
   return (
     <html>
       <body className="min-h-screen bg-bg text-ink">
-        <ClientLayout>
-          {children}
-        </ClientLayout>
+        <LanguageProvider>
+          <ClientLayout>
+            {children}
+          </ClientLayout>
+        </LanguageProvider>
       </body>
     </html>
   );

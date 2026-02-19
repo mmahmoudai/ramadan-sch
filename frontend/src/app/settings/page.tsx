@@ -40,7 +40,7 @@ export default function SettingsPage() {
       setBio(u.bio || "");
       const userLanguage = u.language || "en";
       setLanguageState(userLanguage);
-      setLocale(userLanguage as "en" | "ar");
+      setLocale(userLanguage as "en" | "ar" | "tr");
       setTimezoneIana(u.timezoneIana || Intl.DateTimeFormat().resolvedOptions().timeZone);
       setTimezoneSource(u.timezoneSource || "auto");
       setReminderEnabled(u.reminderEnabled !== false);
@@ -124,6 +124,7 @@ export default function SettingsPage() {
             <select value={language} onChange={(e) => setLanguageState(e.target.value)} className="w-full border-2 border-line rounded-lg px-3 py-2">
               <option value="en">English</option>
               <option value="ar">العربية (Arabic)</option>
+              <option value="tr">Türkçe (Turkish)</option>
             </select>
           </div>
           <div>
