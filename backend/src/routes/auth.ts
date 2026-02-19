@@ -7,6 +7,7 @@ import { AuditLog } from "../models/AuditLog";
 import { generateAccessToken, generateRefreshToken, getRefreshTokenExpiry } from "../utils/tokens";
 import { AppError } from "../middleware/errorHandler";
 import { sendWelcomeEmail, sendPasswordResetEmail } from "../utils/mailer";
+import { detectTimezoneFromIp, getClientIp } from "../utils/timezoneDetector";
 
 export const authRouter = Router();
 
@@ -28,12 +29,20 @@ authRouter.post("/signup", async (req: Request, res: Response, next: NextFunctio
     const existing = await User.findOne({ email: body.email });
     if (existing) throw new AppError(409, "Email already registered");
 
+    // Detect timezone from IP for new users
+    const clientIp = getClientIp(req);
+    const timezoneInfo = await detectTimezoneFromIp(clientIp);
+
     const user = new User({
       email: body.email,
       passwordHash: body.password,
       displayName: body.displayName,
+      timezoneIana: timezoneInfo.timezone,
+      timezoneSource: "auto",
     });
     await user.save();
+
+    console.log(`[TIMEZONE] Auto-detected timezone for new user ${user.email}: ${timezoneInfo.timezone} (IP: ${timezoneInfo.ip})`);
 
     const accessToken = generateAccessToken({ userId: user._id.toString(), email: user.email, role: user.role });
     const refreshTokenStr = generateRefreshToken();
@@ -51,7 +60,14 @@ authRouter.post("/signup", async (req: Request, res: Response, next: NextFunctio
     res.status(201).json({
       accessToken,
       refreshToken: refreshTokenStr,
-      user: { id: user._id, email: user.email, displayName: user.displayName, role: user.role },
+      user: { 
+        id: user._id, 
+        email: user.email, 
+        displayName: user.displayName, 
+        role: user.role,
+        timezoneIana: user.timezoneIana,
+        timezoneSource: user.timezoneSource
+      },
     });
   } catch (err) {
     next(err);
@@ -67,6 +83,20 @@ authRouter.post("/login", async (req: Request, res: Response, next: NextFunction
     const valid = await user.comparePassword(body.password);
     if (!valid) throw new AppError(401, "Invalid email or password");
 
+    // Auto-detect timezone if not set manually
+    if (!user.timezoneIana || user.timezoneSource === "auto") {
+      const clientIp = getClientIp(req);
+      const timezoneInfo = await detectTimezoneFromIp(clientIp);
+      
+      // Only update if timezone is different
+      if (user.timezoneIana !== timezoneInfo.timezone) {
+        user.timezoneIana = timezoneInfo.timezone;
+        user.timezoneSource = "auto";
+        await user.save();
+        console.log(`[TIMEZONE] Auto-detected timezone for user ${user.email}: ${timezoneInfo.timezone} (IP: ${timezoneInfo.ip})`);
+      }
+    }
+
     const accessToken = generateAccessToken({ userId: user._id.toString(), email: user.email, role: user.role });
     const refreshTokenStr = generateRefreshToken();
     const expiresAt = body.keepSignedIn
@@ -80,7 +110,14 @@ authRouter.post("/login", async (req: Request, res: Response, next: NextFunction
     res.json({
       accessToken,
       refreshToken: refreshTokenStr,
-      user: { id: user._id, email: user.email, displayName: user.displayName, role: user.role },
+      user: { 
+        id: user._id, 
+        email: user.email, 
+        displayName: user.displayName, 
+        role: user.role,
+        timezoneIana: user.timezoneIana,
+        timezoneSource: user.timezoneSource
+      },
     });
   } catch (err) {
     next(err);
