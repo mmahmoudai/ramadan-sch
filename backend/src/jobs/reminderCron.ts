@@ -9,13 +9,40 @@ async function processReminders() {
   const now = new Date();
   const today = now.toISOString().split("T")[0];
 
+  // List of valid IANA timezones
+  const validTimezones = [
+    "Africa/Cairo", "Africa/Casablanca", "Asia/Riyadh", "Asia/Dubai",
+    "Asia/Kuwait", "Asia/Qatar", "Asia/Bahrain", "Europe/London",
+    "Europe/Paris", "Europe/Berlin", "America/New_York", "America/Los_Angeles",
+    "America/Chicago", "UTC", "Asia/Istanbul", "Asia/Jerusalem"
+  ];
+
   try {
     const users = await User.find({ reminderEnabled: true });
 
     for (const user of users) {
       try {
+        // Validate and fix timezone
+        let userTimezone = user.timezoneIana || "Asia/Riyadh";
+        
+        // Fix common invalid timezone values
+        if (userTimezone === "Egypt\Cairo" || userTimezone === "Cairo") {
+          userTimezone = "Africa/Cairo";
+        } else if (userTimezone === "Casablanca") {
+          userTimezone = "Africa/Casablanca";
+        } else if (userTimezone === "Cairo/Egy") {
+          userTimezone = "Africa/Cairo";
+        }
+        
+        // If timezone is still invalid, use default
+        if (!validTimezones.includes(userTimezone)) {
+          userTimezone = "Asia/Riyadh";
+          // Update user's timezone in database
+          await User.findByIdAndUpdate(user._id, { timezoneIana: userTimezone });
+        }
+
         // Compute user's local time
-        const userLocalStr = now.toLocaleString("en-US", { timeZone: user.timezoneIana || "Asia/Riyadh" });
+        const userLocalStr = now.toLocaleString("en-US", { timeZone: userTimezone });
         const userLocal = new Date(userLocalStr);
         const userHour = userLocal.getHours();
         const userMinute = userLocal.getMinutes();

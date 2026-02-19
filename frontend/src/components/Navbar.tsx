@@ -49,6 +49,15 @@ export default function Navbar() {
     setLocale(order[(idx + 1) % order.length]);
   };
 
+  const getLanguageDisplay = (loc: Locale) => {
+    const displays = {
+      en: { code: "EN", flag: "🇺🇸", name: "English" },
+      ar: { code: "AR", flag: "🇸🇦", name: "العربية" },
+      tr: { code: "TR", flag: "🇹🇷", name: "Türkçe" }
+    };
+    return displays[loc];
+  };
+
   return (
     <nav className="border-b-2 border-line bg-white/80 backdrop-blur sticky top-0 z-50">
       <div className="mx-auto max-w-[1100px] px-4 flex items-center justify-between h-14">
@@ -73,13 +82,43 @@ export default function Navbar() {
           ))}
 
           {/* Language Toggle */}
-          <button
-            onClick={cycleLanguage}
-            className="px-2 py-1 rounded-lg text-xs font-bold border border-line hover:bg-gray-100 transition"
-            title={t("settings.language")}
-          >
-            {locale.toUpperCase()}
-          </button>
+          <div className="relative group">
+            <button
+              onClick={cycleLanguage}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-semibold border border-line hover:bg-gray-100 transition-all duration-200 hover:shadow-sm"
+              title={`${t("settings.language")}: ${getLanguageDisplay(locale).name}`}
+            >
+              <span className="text-base">{getLanguageDisplay(locale).flag}</span>
+              <span className="hidden sm:inline">{getLanguageDisplay(locale).code}</span>
+              <svg className="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            
+            {/* Tooltip showing all languages */}
+            <div className="absolute top-full mt-1 right-0 bg-white border border-line rounded-lg shadow-lg p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 min-w-[120px]">
+              <div className="text-xs font-semibold text-gray-500 mb-1">{t("settings.language")}</div>
+              {["en", "ar", "tr"].map((lang) => {
+                const display = getLanguageDisplay(lang as Locale);
+                return (
+                  <div
+                    key={lang}
+                    className={`flex items-center gap-2 px-2 py-1 rounded text-sm ${
+                      lang === locale ? "bg-accent text-white" : "hover:bg-gray-100"
+                    }`}
+                  >
+                    <span>{display.flag}</span>
+                    <span>{display.name}</span>
+                    {lang === locale && (
+                      <svg className="w-3 h-3 ml-auto" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
 
           {loggedIn ? (
             <button
