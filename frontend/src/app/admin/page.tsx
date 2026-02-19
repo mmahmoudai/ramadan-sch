@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { isLoggedIn, isAdmin, getToken } from "@/lib/auth";
 import { apiFetch } from "@/lib/api";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface UserRow {
   id: string;
@@ -29,6 +30,7 @@ interface Stats {
 
 export default function AdminPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [stats, setStats] = useState<Stats | null>(null);
   const [users, setUsers] = useState<UserRow[]>([]);
   const [total, setTotal] = useState(0);
@@ -81,7 +83,7 @@ export default function AdminPage() {
 
   const toggleRole = async (userId: string, currentRole: string) => {
     const newRole = currentRole === "admin" ? "user" : "admin";
-    if (!confirm(`Change this user's role to "${newRole}"?`)) return;
+    if (!confirm(`${t("admin.changeRoleTo")} "${newRole}"?`)) return;
     try {
       setActionLoading(userId);
       const token = getToken()!;
@@ -93,14 +95,14 @@ export default function AdminPage() {
       await loadUsers();
       await loadStats();
     } catch (err: any) {
-      alert(err.message || "Failed to update role");
+      alert(err.message || t("admin.updateRoleFailed"));
     } finally {
       setActionLoading(null);
     }
   };
 
   const deleteUser = async (userId: string, email: string) => {
-    if (!confirm(`Are you sure you want to delete user "${email}" and ALL their data? This cannot be undone.`)) return;
+    if (!confirm(`${t("admin.deleteUserConfirm")} "${email}"?`)) return;
     try {
       setActionLoading(userId);
       const token = getToken()!;
@@ -108,7 +110,7 @@ export default function AdminPage() {
       await loadUsers();
       await loadStats();
     } catch (err: any) {
-      alert(err.message || "Failed to delete user");
+      alert(err.message || t("admin.deleteUserFailed"));
     } finally {
       setActionLoading(null);
     }
@@ -124,19 +126,19 @@ export default function AdminPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-extrabold">Admin Dashboard</h1>
+      <h1 className="text-3xl font-extrabold">{t("admin.title")}</h1>
 
       {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard label="Total Users" value={stats.totalUsers} icon="👥" />
-          <StatCard label="Admins" value={stats.totalAdmins} icon="🛡️" />
-          <StatCard label="Daily Entries" value={stats.totalEntries} icon="📝" />
-          <StatCard label="Challenges" value={stats.totalChallenges} icon="🏆" />
-          <StatCard label="Reports" value={stats.totalReports} icon="📊" />
-          <StatCard label="Families" value={stats.totalFamilies} icon="👨‍👩‍👧‍👦" />
-          <StatCard label="Reminders" value={stats.totalReminders} icon="🔔" />
-          <StatCard label="Page" value={`${page}/${totalPages}`} icon="📄" />
+          <StatCard label={t("admin.totalUsers")} value={stats.totalUsers} icon="👥" />
+          <StatCard label={t("admin.admins")} value={stats.totalAdmins} icon="🛡️" />
+          <StatCard label={t("admin.dailyEntries")} value={stats.totalEntries} icon="📝" />
+          <StatCard label={t("challenges.title")} value={stats.totalChallenges} icon="🏆" />
+          <StatCard label={t("reports.title")} value={stats.totalReports} icon="📊" />
+          <StatCard label={t("admin.families")} value={stats.totalFamilies} icon="👨‍👩‍👧‍👦" />
+          <StatCard label={t("admin.reminders")} value={stats.totalReminders} icon="🔔" />
+          <StatCard label={t("admin.page")} value={`${page}/${totalPages}`} icon="📄" />
         </div>
       )}
 
@@ -146,11 +148,11 @@ export default function AdminPage() {
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by email or name..."
+          placeholder={t("admin.searchPlaceholder")}
           className="flex-1 border-2 border-line rounded-xl px-4 py-2 focus:outline-none focus:border-ink"
         />
         <button type="submit" className="bg-ink text-white px-6 py-2 rounded-xl font-bold hover:opacity-90 transition">
-          Search
+          {t("admin.search")}
         </button>
         {search && (
           <button
@@ -158,7 +160,7 @@ export default function AdminPage() {
             onClick={() => { setSearch(""); setPage(1); }}
             className="border-2 border-line px-4 py-2 rounded-xl font-bold hover:bg-gray-100 transition"
           >
-            Clear
+            {t("admin.clear")}
           </button>
         )}
       </form>
@@ -169,23 +171,23 @@ export default function AdminPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b-2 border-line text-left">
-                <th className="px-4 py-3 font-bold">User</th>
-                <th className="px-4 py-3 font-bold">Email</th>
-                <th className="px-4 py-3 font-bold">Role</th>
-                <th className="px-4 py-3 font-bold">Lang</th>
-                <th className="px-4 py-3 font-bold">Entries</th>
-                <th className="px-4 py-3 font-bold">Joined</th>
-                <th className="px-4 py-3 font-bold">Actions</th>
+                <th className="px-4 py-3 font-bold">{t("admin.user")}</th>
+                <th className="px-4 py-3 font-bold">{t("admin.email")}</th>
+                <th className="px-4 py-3 font-bold">{t("admin.role")}</th>
+                <th className="px-4 py-3 font-bold">{t("admin.lang")}</th>
+                <th className="px-4 py-3 font-bold">{t("admin.entries")}</th>
+                <th className="px-4 py-3 font-bold">{t("admin.joined")}</th>
+                <th className="px-4 py-3 font-bold">{t("admin.actions")}</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-gray-500">Loading...</td>
+                  <td colSpan={7} className="px-4 py-8 text-center text-gray-500">{t("admin.loading")}</td>
                 </tr>
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-gray-500">No users found</td>
+                  <td colSpan={7} className="px-4 py-8 text-center text-gray-500">{t("admin.noUsers")}</td>
                 </tr>
               ) : (
                 users.map((u) => (
@@ -209,14 +211,14 @@ export default function AdminPage() {
                           disabled={actionLoading === u.id}
                           className="text-xs px-3 py-1 rounded-lg border border-purple-300 text-purple-700 hover:bg-purple-50 transition disabled:opacity-50"
                         >
-                          {u.role === "admin" ? "Demote" : "Promote"}
+                          {u.role === "admin" ? t("admin.demote") : t("admin.promote")}
                         </button>
                         <button
                           onClick={() => deleteUser(u.id, u.email)}
                           disabled={actionLoading === u.id}
                           className="text-xs px-3 py-1 rounded-lg border border-red-300 text-red-600 hover:bg-red-50 transition disabled:opacity-50"
                         >
-                          Delete
+                          {t("admin.delete")}
                         </button>
                       </div>
                     </td>
@@ -236,17 +238,17 @@ export default function AdminPage() {
             disabled={page === 1}
             className="px-4 py-2 rounded-lg border-2 border-line font-bold hover:bg-gray-100 disabled:opacity-50 transition"
           >
-            Previous
+            {t("admin.previous")}
           </button>
           <span className="px-4 py-2 text-sm font-semibold">
-            Page {page} of {totalPages} ({total} users)
+            {t("admin.page")} {page} {t("admin.of")} {totalPages} ({total} {t("admin.users")})
           </span>
           <button
             onClick={() => setPage(Math.min(totalPages, page + 1))}
             disabled={page === totalPages}
             className="px-4 py-2 rounded-lg border-2 border-line font-bold hover:bg-gray-100 disabled:opacity-50 transition"
           >
-            Next
+            {t("admin.next")}
           </button>
         </div>
       )}

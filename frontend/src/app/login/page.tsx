@@ -5,9 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api";
 import { setAuth } from "@/lib/auth";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [keepSignedIn, setKeepSignedIn] = useState(false);
@@ -26,7 +28,7 @@ export default function LoginPage() {
       setAuth(data.accessToken, data.refreshToken, data.user);
       router.push("/tracker");
     } catch (err: any) {
-      setError(err.message || "Login failed");
+      setError(err.message || t("auth.loginFailed"));
     } finally {
       setLoading(false);
     }
@@ -35,30 +37,30 @@ export default function LoginPage() {
   return (
     <div className="max-w-md mx-auto mt-12">
       <div className="border-2 border-line rounded-2xl bg-card p-8">
-        <h1 className="text-2xl font-extrabold text-center mb-6">Login</h1>
+        <h1 className="text-2xl font-extrabold text-center mb-6">{t("nav.login")}</h1>
         {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 mb-4 text-sm">{error}</div>}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold mb-1">Email</label>
+            <label className="block text-sm font-semibold mb-1">{t("auth.email")}</label>
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full border-2 border-line rounded-lg px-3 py-2 focus:outline-none focus:border-accent" />
           </div>
           <div>
-            <label className="block text-sm font-semibold mb-1">Password</label>
+            <label className="block text-sm font-semibold mb-1">{t("auth.password")}</label>
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full border-2 border-line rounded-lg px-3 py-2 focus:outline-none focus:border-accent" />
           </div>
           <label className="flex items-center gap-2 text-sm cursor-pointer">
             <input type="checkbox" checked={keepSignedIn} onChange={(e) => setKeepSignedIn(e.target.checked)} className="accent-accent" />
-            Keep me signed in (45 days)
+            {t("auth.keepSignedIn")}
           </label>
           <button type="submit" disabled={loading} className="w-full bg-ink text-white py-2.5 rounded-lg font-bold hover:opacity-90 transition disabled:opacity-50">
-            {loading ? "Logging in..." : "Login"}
+            {loading ? t("auth.loggingIn") : t("nav.login")}
           </button>
         </form>
         <div className="mt-4 text-center text-sm">
-          <Link href="/forgot-password" className="text-accent hover:underline">Forgot Password?</Link>
+          <Link href="/forgot-password" className="text-accent hover:underline">{t("auth.forgotPassword")}</Link>
         </div>
         <div className="mt-2 text-center text-sm">
-          Don&apos;t have an account? <Link href="/signup" className="text-accent font-semibold hover:underline">Sign Up</Link>
+          {t("auth.noAccount")} <Link href="/signup" className="text-accent font-semibold hover:underline">{t("nav.signup")}</Link>
         </div>
       </div>
     </div>

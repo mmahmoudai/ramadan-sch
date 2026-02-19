@@ -4,9 +4,11 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api";
 import { getToken, isLoggedIn } from "@/lib/auth";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function SettingsPage() {
   const router = useRouter();
+  const { setLocale, t } = useLanguage();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -18,7 +20,7 @@ export default function SettingsPage() {
   const [bio, setBio] = useState("");
 
   // Settings fields
-  const [language, setLanguage] = useState("en");
+  const [language, setLanguageState] = useState("en");
   const [timezoneIana, setTimezoneIana] = useState("");
   const [timezoneSource, setTimezoneSource] = useState("auto");
   const [reminderEnabled, setReminderEnabled] = useState(true);
@@ -36,7 +38,9 @@ export default function SettingsPage() {
       setUser(u);
       setDisplayName(u.displayName || "");
       setBio(u.bio || "");
-      setLanguage(u.language || "en");
+      const userLanguage = u.language || "en";
+      setLanguageState(userLanguage);
+      setLocale(userLanguage as "en" | "ar" | "tr");
       setTimezoneIana(u.timezoneIana || Intl.DateTimeFormat().resolvedOptions().timeZone);
       setTimezoneSource(u.timezoneSource || "auto");
       setReminderEnabled(u.reminderEnabled !== false);
@@ -54,7 +58,7 @@ export default function SettingsPage() {
     try {
       const token = getToken()!;
       await apiFetch("/me/profile", { method: "PATCH", token, body: JSON.stringify({ displayName, bio }) });
-      setMessage("Profile saved!");
+      setMessage(t("settings.profileSaved"));
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -73,7 +77,8 @@ export default function SettingsPage() {
         token,
         body: JSON.stringify({ language, timezoneIana, timezoneSource, reminderEnabled }),
       });
-      setMessage("Settings saved!");
+      setLocale(language as "en" | "ar" | "tr");
+      setMessage(t("settings.settingsSaved"));
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -81,72 +86,69 @@ export default function SettingsPage() {
     }
   };
 
-  if (loading) return <div className="text-center py-20 text-lg">Loading...</div>;
+  if (loading) return <div className="text-center py-20 text-lg">{t("common.loading")}</div>;
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <h1 className="text-3xl font-extrabold">Settings</h1>
+      <h1 className="text-3xl font-extrabold">{t("settings.title")}</h1>
 
       {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm">{error}</div>}
       {message && <div className="bg-green-50 border border-green-200 text-green-700 rounded-lg p-3 text-sm">{message}</div>}
 
       {/* Profile */}
       <div className="border-2 border-line rounded-xl bg-card p-5">
-        <h2 className="font-bold text-lg mb-4">Profile</h2>
+        <h2 className="font-bold text-lg mb-4">{t("settings.profile")}</h2>
         <div className="space-y-3">
           <div>
-            <label className="block text-sm font-semibold mb-1">Display Name</label>
+            <label className="block text-sm font-semibold mb-1">{t("auth.displayName")}</label>
             <input type="text" value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="w-full border-2 border-line rounded-lg px-3 py-2" />
           </div>
           <div>
-            <label className="block text-sm font-semibold mb-1">Bio</label>
+            <label className="block text-sm font-semibold mb-1">{t("settings.bio")}</label>
             <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={3} className="w-full border-2 border-line rounded-lg px-3 py-2" />
           </div>
           <div>
-            <label className="block text-sm font-semibold mb-1">Email</label>
+            <label className="block text-sm font-semibold mb-1">{t("settings.reminders")}</label>
             <input type="email" value={user?.email || ""} disabled className="w-full border-2 border-gray-200 rounded-lg px-3 py-2 bg-gray-50 text-gray-500" />
           </div>
-          <button onClick={saveProfile} disabled={saving} className="bg-ink text-white px-6 py-2 rounded-lg font-bold text-sm hover:opacity-90 disabled:opacity-50">
-            {saving ? "Saving..." : "Save Profile"}
-          </button>
+          <button onClick={saveProfile} disabled={saving} className="bg-ink text-white px-4 py-2 rounded-lg font-semibold hover:bg-ink/80 disabled:opacity-50">{t("common.save")}</button>
         </div>
       </div>
 
       {/* Settings */}
       <div className="border-2 border-line rounded-xl bg-card p-5">
-        <h2 className="font-bold text-lg mb-4">App Settings</h2>
+        <h2 className="font-bold text-lg mb-4">{t("settings.appSettings")}</h2>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold mb-1">Language</label>
-            <select value={language} onChange={(e) => setLanguage(e.target.value)} className="w-full border-2 border-line rounded-lg px-3 py-2">
+            <label className="block text-sm font-semibold mb-1">{t("settings.language")}</label>
+            <select value={language} onChange={(e) => setLanguageState(e.target.value)} className="w-full border-2 border-line rounded-lg px-3 py-2">
               <option value="en">English</option>
               <option value="ar">العربية (Arabic)</option>
+              <option value="tr">Türkçe (Turkish)</option>
             </select>
           </div>
           <div>
-            <label className="block text-sm font-semibold mb-1">Timezone Source</label>
+            <label className="block text-sm font-semibold mb-1">{t("settings.timezone")}</label>
             <div className="flex gap-4">
               <label className="flex items-center gap-2 text-sm cursor-pointer">
-                <input type="radio" name="tzSrc" checked={timezoneSource === "auto"} onChange={() => { setTimezoneSource("auto"); setTimezoneIana(Intl.DateTimeFormat().resolvedOptions().timeZone); }} /> Auto-detect
+                <input type="radio" name="tzSrc" checked={timezoneSource === "auto"} onChange={() => { setTimezoneSource("auto"); setTimezoneIana(Intl.DateTimeFormat().resolvedOptions().timeZone); }} /> {t("settings.autoDetect")}
               </label>
               <label className="flex items-center gap-2 text-sm cursor-pointer">
-                <input type="radio" name="tzSrc" checked={timezoneSource === "manual"} onChange={() => setTimezoneSource("manual")} /> Manual
+                <input type="radio" name="tzSrc" checked={timezoneSource === "manual"} onChange={() => setTimezoneSource("manual")} /> {t("settings.manual")}
               </label>
             </div>
           </div>
           <div>
-            <label className="block text-sm font-semibold mb-1">Timezone</label>
+            <label className="block text-sm font-semibold mb-1">{t("settings.timezoneIana")}</label>
             <input type="text" value={timezoneIana} onChange={(e) => setTimezoneIana(e.target.value)} disabled={timezoneSource === "auto"} className="w-full border-2 border-line rounded-lg px-3 py-2 disabled:bg-gray-50 disabled:text-gray-500" />
           </div>
           <div>
             <label className="flex items-center gap-2 text-sm cursor-pointer">
               <input type="checkbox" checked={reminderEnabled} onChange={(e) => setReminderEnabled(e.target.checked)} className="accent-accent w-4 h-4" />
-              <span className="font-semibold">Enable email reminders at 9:00 PM</span>
+              <span className="font-semibold">{t("settings.reminderEnabled")}</span>
             </label>
           </div>
-          <button onClick={saveSettings} disabled={saving} className="bg-ink text-white px-6 py-2 rounded-lg font-bold text-sm hover:opacity-90 disabled:opacity-50">
-            {saving ? "Saving..." : "Save Settings"}
-          </button>
+          <button onClick={saveSettings} disabled={saving} className="bg-ink text-white px-4 py-2 rounded-lg font-semibold hover:bg-ink/80 disabled:opacity-50">{t("common.save")}</button>
         </div>
       </div>
       {/* Reminder Metrics */}
@@ -156,6 +158,7 @@ export default function SettingsPage() {
 }
 
 function ReminderMetrics() {
+  const { t } = useLanguage();
   const [stats, setStats] = useState<any>(null);
   const [reminders, setReminders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -182,28 +185,28 @@ function ReminderMetrics() {
 
   return (
     <div className="border-2 border-line rounded-xl bg-card p-5">
-      <h2 className="font-bold text-lg mb-4">Reminder Delivery Metrics</h2>
+      <h2 className="font-bold text-lg mb-4">{t("settings.reminderMetrics")}</h2>
       <div className="grid grid-cols-4 gap-3 mb-4">
         <div className="bg-white rounded-lg border border-gray-200 p-3 text-center">
           <p className="text-2xl font-extrabold">{stats.total}</p>
-          <p className="text-xs font-semibold text-gray-500">Total</p>
+          <p className="text-xs font-semibold text-gray-500">{t("stats.total")}</p>
         </div>
         <div className="bg-white rounded-lg border border-green-200 p-3 text-center">
           <p className="text-2xl font-extrabold text-green-600">{stats.sent}</p>
-          <p className="text-xs font-semibold text-gray-500">Sent</p>
+          <p className="text-xs font-semibold text-gray-500">{t("stats.sent")}</p>
         </div>
         <div className="bg-white rounded-lg border border-yellow-200 p-3 text-center">
           <p className="text-2xl font-extrabold text-yellow-600">{stats.skipped}</p>
-          <p className="text-xs font-semibold text-gray-500">Skipped</p>
+          <p className="text-xs font-semibold text-gray-500">{t("stats.skipped")}</p>
         </div>
         <div className="bg-white rounded-lg border border-red-200 p-3 text-center">
           <p className="text-2xl font-extrabold text-red-600">{stats.failed}</p>
-          <p className="text-xs font-semibold text-gray-500">Failed</p>
+          <p className="text-xs font-semibold text-gray-500">{t("stats.failed")}</p>
         </div>
       </div>
       {reminders.length > 0 && (
         <div>
-          <h3 className="text-sm font-bold mb-2">Recent Reminders</h3>
+          <h3 className="text-sm font-bold mb-2">{t("settings.recentReminders")}</h3>
           <div className="space-y-1 max-h-40 overflow-y-auto">
             {reminders.map((r: any) => (
               <div key={r._id} className="flex items-center justify-between bg-white rounded px-3 py-1.5 border border-gray-100 text-xs">

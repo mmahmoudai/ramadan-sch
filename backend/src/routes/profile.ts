@@ -29,7 +29,7 @@ const profileUpdateSchema = z.object({
 });
 
 const settingsUpdateSchema = z.object({
-  language: z.enum(["ar", "en"]).optional(),
+  language: z.enum(["ar", "en", "tr"]).optional(),
   timezoneIana: z.string().optional(),
   timezoneSource: z.enum(["auto", "manual"]).optional(),
   reminderEnabled: z.boolean().optional(),
