@@ -42,6 +42,31 @@ git push origin master
 bash deploy/deploy-production.sh
 ```
 
+## Staging Environment
+
+Staging runs the `develop` branch on the same server with separate ports and database:
+
+| | Production | Staging |
+|---|---|---|
+| **Frontend** | `ramadantracker.club` (port 3000) | `staging.ramadantracker.club` (port 3001) |
+| **API** | `api.ramadantracker.club` (port 4000) | `api-staging.ramadantracker.club` (port 4001) |
+| **Database** | `ramadan_tracker` | `ramadan_tracker_staging` |
+| **Branch** | `master` | `develop` |
+| **PM2 names** | `ramadan-tracker-api`, `ramadan-tracker-frontend` | `staging-api`, `staging-frontend` |
+
+Deploy to staging:
+```bash
+bash deploy/deploy-staging.sh
+```
+
+## Database Backup
+
+Download a full backup of the production database:
+```bash
+bash deploy/backup-db.sh
+```
+Backups are saved to `./backups/` (gitignored).
+
 ## Rules
 
 1. **Never push directly to `master`** — always merge from `develop`
