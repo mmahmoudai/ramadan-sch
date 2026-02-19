@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { isLoggedIn, clearAuth, getUser, isAdmin } from "@/lib/auth";
 import { apiFetch } from "@/lib/api";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { type Locale } from "@/lib/i18n";
 
@@ -14,6 +14,8 @@ export default function Navbar() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [userName, setUserName] = useState("");
   const [admin, setAdmin] = useState(false);
+  const [langMenuOpen, setLangMenuOpen] = useState(false);
+  const langMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setLoggedIn(isLoggedIn());
@@ -21,6 +23,25 @@ export default function Navbar() {
     const u = getUser();
     if (u) setUserName(u.displayName);
   }, [pathname]);
+
+  useEffect(() => {
+    const onDocumentMouseDown = (event: MouseEvent) => {
+      if (langMenuRef.current && !langMenuRef.current.contains(event.target as Node)) {
+        setLangMenuOpen(false);
+      }
+    };
+
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setLangMenuOpen(false);
+    };
+
+    document.addEventListener("mousedown", onDocumentMouseDown);
+    document.addEventListener("keydown", onEscape);
+    return () => {
+      document.removeEventListener("mousedown", onDocumentMouseDown);
+      document.removeEventListener("keydown", onEscape);
+    };
+  }, []);
 
   const handleLogout = async () => {
     const rt = typeof window !== "undefined" ? localStorage.getItem("rt_refresh_token") : null;
@@ -43,10 +64,11 @@ export default function Navbar() {
       ]
     : [];
 
-  const cycleLanguage = () => {
-    const order: Locale[] = ["en", "ar", "tr"];
-    const idx = order.indexOf(locale);
-    setLocale(order[(idx + 1) % order.length]);
+  const languageOptions: Locale[] = ["en", "ar", "tr"];
+
+  const handleLanguageSelect = (nextLocale: Locale) => {
+    setLocale(nextLocale);
+    setLangMenuOpen(false);
   };
 
   const getLanguageDisplay = (loc: Locale) => {
@@ -82,28 +104,33 @@ export default function Navbar() {
           ))}
 
           {/* Language Toggle */}
-          <div className="relative group">
+          <div ref={langMenuRef} className="relative">
             <button
-              onClick={cycleLanguage}
+              type="button"
+              onClick={() => setLangMenuOpen((v) => !v)}
               className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-semibold border border-line hover:bg-gray-100 transition-all duration-200 hover:shadow-sm"
               title={`${t("settings.language")}: ${getLanguageDisplay(locale).name}`}
+              aria-haspopup="menu"
+              aria-expanded={langMenuOpen}
             >
               <span className="text-base">{getLanguageDisplay(locale).flag}</span>
               <span className="hidden sm:inline">{getLanguageDisplay(locale).code}</span>
-              <svg className="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className={`w-3 h-3 opacity-70 transition-transform duration-200 ${langMenuOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </button>
             
-            {/* Tooltip showing all languages */}
-            <div className="absolute top-full mt-1 right-0 bg-white border border-line rounded-lg shadow-lg p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 min-w-[120px]">
+            {/* Dropdown showing all languages */}
+            <div className={`absolute top-full mt-1 right-0 bg-white border border-line rounded-lg shadow-lg p-2 z-50 min-w-[150px] transition-all duration-150 ${langMenuOpen ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-1 pointer-events-none"}`}>
               <div className="text-xs font-semibold text-gray-500 mb-1">{t("settings.language")}</div>
-              {["en", "ar", "tr"].map((lang) => {
+              {languageOptions.map((lang) => {
                 const display = getLanguageDisplay(lang as Locale);
                 return (
-                  <div
+                  <button
                     key={lang}
-                    className={`flex items-center gap-2 px-2 py-1 rounded text-sm ${
+                    type="button"
+                    onClick={() => handleLanguageSelect(lang as Locale)}
+                    className={`w-full flex items-center gap-2 px-2 py-1 rounded text-sm text-left transition-colors ${
                       lang === locale ? "bg-accent text-white" : "hover:bg-gray-100"
                     }`}
                   >
@@ -114,7 +141,7 @@ export default function Navbar() {
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                     )}
-                  </div>
+                  </button>
                 );
               })}
             </div>
