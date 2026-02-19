@@ -1,6 +1,17 @@
-# Ramadan Tracker 🌙
+# Ramadan Tracker v2 🌙
 
-A comprehensive full-stack web application for tracking daily worship, habits, and spiritual progress during Ramadan. Built with Next.js 14 and Express.js, featuring bilingual support (Arabic/English), family sharing, and automated reminders.
+A comprehensive full-stack web application for tracking daily worship, habits, and spiritual progress during Ramadan. Built with Next.js 14 and Express.js, featuring full multilingual support (Arabic/English/Turkish), family sharing, and automated reminders.
+
+## 🆕 Version 2 (Production Sprint)
+
+This README reflects the **v2 release** currently deployed to production.
+
+### v2 Highlights
+- ✅ Full frontend localization across **English, Arabic, and Turkish**
+- ✅ Improved language switcher UX with a clickable dropdown and explicit language selection
+- ✅ Backend support for Turkish locale in profile/settings validation
+- ✅ Reminder cron stability fixes for invalid timezone values
+- ✅ Automatic timezone detection on first login/signup with Egypt (`Africa/Cairo`) fallback
 
 ## ✨ Features
 
@@ -30,10 +41,10 @@ A comprehensive full-stack web application for tracking daily worship, habits, a
 - Share reports via unique links
 - Daily breakdown with completion metrics
 
-### 🌍 Bilingual Support
-- Full Arabic/English language support
+### 🌍 Multilingual Support (EN/AR/TR)
+- Full English/Arabic/Turkish language support across pages and components
 - RTL layout for Arabic
-- Language toggle in navbar
+- Improved navbar language switcher (click-to-open dropdown with direct selection)
 - Localized date formats (Hijri/Gregorian)
 
 ### ⏰ Reminders
@@ -238,7 +249,7 @@ npx vitest src/tests/integration/
 
 ## 🌍 Internationalization
 
-The app supports Arabic and English with:
+The app supports English, Arabic, and Turkish with:
 - Dynamic language switching
 - RTL layout for Arabic
 - Localized date formats (Hijri/Gregorian)
@@ -248,7 +259,7 @@ The app supports Arabic and English with:
 
 The app displays Hijri dates with:
 - Accurate conversion from Gregorian
-- Month names in both languages
+- Month names in supported languages
 - Automatic detection of Ramadan
 - Historical tracking
 
