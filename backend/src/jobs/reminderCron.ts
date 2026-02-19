@@ -23,7 +23,7 @@ async function processReminders() {
     for (const user of users) {
       try {
         // Validate and fix timezone
-        let userTimezone = user.timezoneIana || "Asia/Riyadh";
+        let userTimezone = user.timezoneIana || "Africa/Cairo";
         
         // Fix common invalid timezone values
         if (userTimezone === "Egypt\Cairo" || userTimezone === "Cairo") {
@@ -36,7 +36,7 @@ async function processReminders() {
         
         // If timezone is still invalid, use default
         if (!validTimezones.includes(userTimezone)) {
-          userTimezone = "Asia/Riyadh";
+          userTimezone = "Africa/Cairo";
           // Update user's timezone in database
           await User.findByIdAndUpdate(user._id, { timezoneIana: userTimezone });
         }
