@@ -183,7 +183,7 @@ export default function ChallengesPage() {
                 <h3 className="font-bold text-lg">{c.title}</h3>
                 {c.description && <p className="text-sm text-gray-600 mt-1">{c.description}</p>}
                 <div className="flex gap-2 mt-2">
-                  <span className="bg-gray-200 px-2 py-0.5 rounded text-xs font-bold uppercase">{c.scope}</span>
+                  <span className="bg-gray-200 px-2 py-0.5 rounded text-xs font-bold uppercase">{t(`challenges.${c.scope}`)}</span>
                   <span className={`px-2 py-0.5 rounded text-xs font-bold ${c.active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
                     {c.active ? t("challenges.active") : t("challenges.inactive")}
                   </span>
