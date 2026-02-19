@@ -4,9 +4,11 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api";
 import { getToken, isLoggedIn, getUser } from "@/lib/auth";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function FamilyPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [groups, setGroups] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -56,7 +58,7 @@ export default function FamilyPage() {
       await apiFetch(`/families/${inviteGroupId}/invite`, { method: "POST", token, body: JSON.stringify({ email: inviteEmail }) });
       setInviteEmail("");
       setInviteGroupId("");
-      setMessage("Invitation sent!");
+      setMessage(t("family.invitationSent"));
       loadGroups();
     } catch (err: any) {
       setError(err.message);
@@ -74,7 +76,7 @@ export default function FamilyPage() {
   };
 
   const leaveGroup = async (groupId: string) => {
-    if (!confirm("Leave this group?")) return;
+    if (!confirm(t("family.leaveConfirm"))) return;
     try {
       const token = getToken()!;
       await apiFetch(`/families/${groupId}/leave`, { method: "POST", token });
@@ -86,14 +88,14 @@ export default function FamilyPage() {
 
   const userId = getUser()?.id;
 
-  if (loading) return <div className="text-center py-20 text-lg">Loading...</div>;
+  if (loading) return <div className="text-center py-20 text-lg">{t("common.loading")}</div>;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-extrabold">Family Groups</h1>
+        <h1 className="text-3xl font-extrabold">{t("family.title")}</h1>
         <button onClick={() => setShowForm(!showForm)} className="bg-ink text-white px-4 py-2 rounded-lg font-bold text-sm hover:opacity-90">
-          {showForm ? "Cancel" : "+ Create Group"}
+          {showForm ? t("common.cancel") : t("family.createPlus")}
         </button>
       </div>
 
@@ -102,8 +104,8 @@ export default function FamilyPage() {
 
       {showForm && (
         <form onSubmit={createGroup} className="border-2 border-line rounded-xl bg-card p-4 flex gap-3">
-          <input type="text" placeholder="Group name" value={groupName} onChange={(e) => setGroupName(e.target.value)} required className="flex-1 border-2 border-line rounded-lg px-3 py-2" />
-          <button type="submit" className="bg-accent text-white px-6 py-2 rounded-lg font-bold text-sm">Create</button>
+          <input type="text" placeholder={t("family.groupNamePlaceholder")} value={groupName} onChange={(e) => setGroupName(e.target.value)} required className="flex-1 border-2 border-line rounded-lg px-3 py-2" />
+          <button type="submit" className="bg-accent text-white px-6 py-2 rounded-lg font-bold text-sm">{t("challenges.createAction")}</button>
         </form>
       )}
 
@@ -118,14 +120,14 @@ export default function FamilyPage() {
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="font-bold text-lg">{g.name}</h3>
-                  <p className="text-xs text-gray-500">{g.members?.length || 0} members</p>
+                  <p className="text-xs text-gray-500">{g.members?.length || 0} {t("family.members")}</p>
                 </div>
                 <div className="flex gap-2">
                   {isPending && (
-                    <button onClick={() => acceptInvite(g._id)} className="bg-green-600 text-white px-3 py-1 rounded-lg text-xs font-bold">Accept Invite</button>
+                    <button onClick={() => acceptInvite(g._id)} className="bg-green-600 text-white px-3 py-1 rounded-lg text-xs font-bold">{t("family.acceptInvite")}</button>
                   )}
                   {!isOwner && !isPending && (
-                    <button onClick={() => leaveGroup(g._id)} className="text-xs px-3 py-1 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 font-semibold">Leave</button>
+                    <button onClick={() => leaveGroup(g._id)} className="text-xs px-3 py-1 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 font-semibold">{t("family.leave")}</button>
                   )}
                 </div>
               </div>
@@ -133,23 +135,27 @@ export default function FamilyPage() {
               <div className="mt-3 space-y-1">
                 {g.members?.map((m: any, i: number) => (
                   <div key={i} className="flex items-center gap-2 text-sm bg-white rounded-lg px-3 py-1.5 border border-gray-100">
-                    <span className="font-semibold">{m.userId?.displayName || m.userId?.email || "User"}</span>
-                    <span className={`text-xs px-2 py-0.5 rounded ${m.role === "owner" ? "bg-accent/20 text-accent" : "bg-gray-100"}`}>{m.role}</span>
-                    <span className={`text-xs px-2 py-0.5 rounded ${m.status === "active" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>{m.status}</span>
+                    <span className="font-semibold">{m.userId?.displayName || m.userId?.email || t("family.user")}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded ${m.role === "owner" ? "bg-accent/20 text-accent" : "bg-gray-100"}`}>
+                      {m.role === "owner" ? t("family.owner") : t("family.member")}
+                    </span>
+                    <span className={`text-xs px-2 py-0.5 rounded ${m.status === "active" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
+                      {m.status === "active" ? t("family.statusActive") : t("family.statusInvited")}
+                    </span>
                   </div>
                 ))}
               </div>
 
               {isOwner && (
                 <form onSubmit={inviteMember} className="mt-3 flex gap-2">
-                  <input type="email" placeholder="Invite by email" value={inviteGroupId === g._id ? inviteEmail : ""} onChange={(e) => { setInviteEmail(e.target.value); setInviteGroupId(g._id); }} className="flex-1 border border-line rounded-lg px-3 py-1.5 text-sm" />
-                  <button type="submit" onClick={() => setInviteGroupId(g._id)} className="bg-ink text-white px-4 py-1.5 rounded-lg text-xs font-bold">Invite</button>
+                  <input type="email" placeholder={t("family.inviteByEmail")} value={inviteGroupId === g._id ? inviteEmail : ""} onChange={(e) => { setInviteEmail(e.target.value); setInviteGroupId(g._id); }} className="flex-1 border border-line rounded-lg px-3 py-1.5 text-sm" />
+                  <button type="submit" onClick={() => setInviteGroupId(g._id)} className="bg-ink text-white px-4 py-1.5 rounded-lg text-xs font-bold">{t("family.invite")}</button>
                 </form>
               )}
             </div>
           );
         })}
-        {groups.length === 0 && <p className="text-gray-500 text-center py-8">No family groups yet.</p>}
+        {groups.length === 0 && <p className="text-gray-500 text-center py-8">{t("family.noGroups")}</p>}
       </div>
     </div>
   );

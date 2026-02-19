@@ -8,7 +8,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { locale, setLocale, t } = useLanguage();
+  const { setLocale, t } = useLanguage();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -58,7 +58,7 @@ export default function SettingsPage() {
     try {
       const token = getToken()!;
       await apiFetch("/me/profile", { method: "PATCH", token, body: JSON.stringify({ displayName, bio }) });
-      setMessage("Profile saved!");
+      setMessage(t("settings.profileSaved"));
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -77,8 +77,8 @@ export default function SettingsPage() {
         token,
         body: JSON.stringify({ language, timezoneIana, timezoneSource, reminderEnabled }),
       });
-      setLocale(language as "en" | "ar");
-      setMessage("Settings saved!");
+      setLocale(language as "en" | "ar" | "tr");
+      setMessage(t("settings.settingsSaved"));
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -97,7 +97,7 @@ export default function SettingsPage() {
 
       {/* Profile */}
       <div className="border-2 border-line rounded-xl bg-card p-5">
-        <h2 className="font-bold text-lg mb-4">Profile</h2>
+        <h2 className="font-bold text-lg mb-4">{t("settings.profile")}</h2>
         <div className="space-y-3">
           <div>
             <label className="block text-sm font-semibold mb-1">{t("auth.displayName")}</label>
@@ -131,10 +131,10 @@ export default function SettingsPage() {
             <label className="block text-sm font-semibold mb-1">{t("settings.timezone")}</label>
             <div className="flex gap-4">
               <label className="flex items-center gap-2 text-sm cursor-pointer">
-                <input type="radio" name="tzSrc" checked={timezoneSource === "auto"} onChange={() => { setTimezoneSource("auto"); setTimezoneIana(Intl.DateTimeFormat().resolvedOptions().timeZone); }} /> Auto-detect
+                <input type="radio" name="tzSrc" checked={timezoneSource === "auto"} onChange={() => { setTimezoneSource("auto"); setTimezoneIana(Intl.DateTimeFormat().resolvedOptions().timeZone); }} /> {t("settings.autoDetect")}
               </label>
               <label className="flex items-center gap-2 text-sm cursor-pointer">
-                <input type="radio" name="tzSrc" checked={timezoneSource === "manual"} onChange={() => setTimezoneSource("manual")} /> Manual
+                <input type="radio" name="tzSrc" checked={timezoneSource === "manual"} onChange={() => setTimezoneSource("manual")} /> {t("settings.manual")}
               </label>
             </div>
           </div>
@@ -158,6 +158,7 @@ export default function SettingsPage() {
 }
 
 function ReminderMetrics() {
+  const { t } = useLanguage();
   const [stats, setStats] = useState<any>(null);
   const [reminders, setReminders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -184,28 +185,28 @@ function ReminderMetrics() {
 
   return (
     <div className="border-2 border-line rounded-xl bg-card p-5">
-      <h2 className="font-bold text-lg mb-4">Reminder Delivery Metrics</h2>
+      <h2 className="font-bold text-lg mb-4">{t("settings.reminderMetrics")}</h2>
       <div className="grid grid-cols-4 gap-3 mb-4">
         <div className="bg-white rounded-lg border border-gray-200 p-3 text-center">
           <p className="text-2xl font-extrabold">{stats.total}</p>
-          <p className="text-xs font-semibold text-gray-500">Total</p>
+          <p className="text-xs font-semibold text-gray-500">{t("stats.total")}</p>
         </div>
         <div className="bg-white rounded-lg border border-green-200 p-3 text-center">
           <p className="text-2xl font-extrabold text-green-600">{stats.sent}</p>
-          <p className="text-xs font-semibold text-gray-500">Sent</p>
+          <p className="text-xs font-semibold text-gray-500">{t("stats.sent")}</p>
         </div>
         <div className="bg-white rounded-lg border border-yellow-200 p-3 text-center">
           <p className="text-2xl font-extrabold text-yellow-600">{stats.skipped}</p>
-          <p className="text-xs font-semibold text-gray-500">Skipped</p>
+          <p className="text-xs font-semibold text-gray-500">{t("stats.skipped")}</p>
         </div>
         <div className="bg-white rounded-lg border border-red-200 p-3 text-center">
           <p className="text-2xl font-extrabold text-red-600">{stats.failed}</p>
-          <p className="text-xs font-semibold text-gray-500">Failed</p>
+          <p className="text-xs font-semibold text-gray-500">{t("stats.failed")}</p>
         </div>
       </div>
       {reminders.length > 0 && (
         <div>
-          <h3 className="text-sm font-bold mb-2">Recent Reminders</h3>
+          <h3 className="text-sm font-bold mb-2">{t("settings.recentReminders")}</h3>
           <div className="space-y-1 max-h-40 overflow-y-auto">
             {reminders.map((r: any) => (
               <div key={r._id} className="flex items-center justify-between bg-white rounded px-3 py-1.5 border border-gray-100 text-xs">

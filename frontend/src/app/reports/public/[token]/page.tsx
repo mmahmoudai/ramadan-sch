@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { apiFetch } from "@/lib/api";
-import { formatHijriDate, type Locale } from "@/lib/i18n";
+import { formatHijriDate } from "@/lib/i18n";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function PublicReportPage() {
   const params = useParams();
+  const { locale, t } = useLanguage();
   const token = params.token as string;
   const [report, setReport] = useState<any>(null);
   const [entries, setEntries] = useState<any[]>([]);
@@ -26,26 +28,18 @@ export default function PublicReportPage() {
       setEntries(data.entries || []);
       setOwner(data.owner);
     } catch (err: any) {
-      setError(err.message || "Report not found or revoked");
+      setError(err.message || t("report.notFound"));
     } finally {
       setLoading(false);
     }
   };
 
-  const getCurrentLocale = (): Locale => {
-    if (typeof window !== "undefined") {
-      const htmlLang = document.documentElement.lang;
-      return htmlLang === "ar" ? "ar" : "en";
-    }
-    return "en";
-  };
-
-  if (loading) return <div className="text-center py-20 text-lg">Loading report...</div>;
+  if (loading) return <div className="text-center py-20 text-lg">{t("report.loading")}</div>;
   if (error) return (
     <div className="max-w-lg mx-auto mt-16 text-center">
       <div className="border-2 border-line rounded-2xl bg-card p-8">
         <div className="text-5xl mb-4">📋</div>
-        <h1 className="text-2xl font-extrabold mb-2">Report Not Found</h1>
+        <h1 className="text-2xl font-extrabold mb-2">{t("report.notFound")}</h1>
         <p className="text-gray-600">{error}</p>
       </div>
     </div>
@@ -59,8 +53,8 @@ export default function PublicReportPage() {
     <div className="space-y-6 max-w-3xl mx-auto">
       {/* Header */}
       <div className="border-2 border-line rounded-2xl bg-[repeating-linear-gradient(45deg,rgba(255,255,255,0.85),rgba(255,255,255,0.85)_10px,rgba(240,240,240,0.95)_10px,rgba(240,240,240,0.95)_20px)] p-6 text-center">
-        <p className="font-ruqaa text-3xl mb-1">رمضان كريم</p>
-        <h1 className="text-2xl font-extrabold">Ramadan Report</h1>
+        <p className="font-ruqaa text-3xl mb-1">{t("app.subtitle")}</p>
+        <h1 className="text-2xl font-extrabold">{t("report.ramadanReport")}</h1>
         {owner && (
           <div className="mt-3 flex items-center justify-center gap-3">
             {owner.avatarUrl && <img src={owner.avatarUrl} alt="" className="w-10 h-10 rounded-full border-2 border-line" />}
@@ -80,21 +74,21 @@ export default function PublicReportPage() {
       <div className="grid grid-cols-3 gap-4">
         <div className="border-2 border-line rounded-xl bg-card p-4 text-center">
           <p className="text-3xl font-extrabold text-accent">{entries.length}</p>
-          <p className="text-sm font-semibold text-gray-600">Days Tracked</p>
+          <p className="text-sm font-semibold text-gray-600">{t("report.daysTracked")}</p>
         </div>
         <div className="border-2 border-line rounded-xl bg-card p-4 text-center">
           <p className="text-3xl font-extrabold text-accent">{overallScore}%</p>
-          <p className="text-sm font-semibold text-gray-600">Completion</p>
+          <p className="text-sm font-semibold text-gray-600">{t("report.completion")}</p>
         </div>
         <div className="border-2 border-line rounded-xl bg-card p-4 text-center">
           <p className="text-3xl font-extrabold text-accent">{completedFields}</p>
-          <p className="text-sm font-semibold text-gray-600">Items Done</p>
+          <p className="text-sm font-semibold text-gray-600">{t("report.itemsDone")}</p>
         </div>
       </div>
 
       {/* Daily Breakdown */}
       <div className="border-2 border-line rounded-xl bg-card p-4">
-        <h2 className="font-bold text-lg mb-3">Daily Breakdown</h2>
+        <h2 className="font-bold text-lg mb-3">{t("report.dailyBreakdown")}</h2>
         <div className="space-y-2">
           {entries.map((entry: any) => {
             const completed = entry.fields?.filter((f: any) => f.completed).length || 0;
@@ -106,7 +100,7 @@ export default function PublicReportPage() {
                   <span className="font-semibold">{entry.gregorianDate}</span>
                   {entry.hijriDay && (
                     <span className="text-xs text-gray-500 ml-2">
-                      {formatHijriDate(entry.hijriDay, entry.hijriMonth, entry.hijriYear, getCurrentLocale())}
+                      {formatHijriDate(entry.hijriDay, entry.hijriMonth, entry.hijriYear, locale)}
                     </span>
                   )}
                 </div>
@@ -126,7 +120,7 @@ export default function PublicReportPage() {
             );
           })}
           {entries.length === 0 && (
-            <p className="text-gray-500 text-center py-4">No entries in this period.</p>
+            <p className="text-gray-500 text-center py-4">{t("report.noEntriesPeriod")}</p>
           )}
         </div>
       </div>
@@ -168,7 +162,7 @@ export default function PublicReportPage() {
 
       {/* Footer */}
       <div className="text-center text-sm text-gray-500 border-t border-dashed border-gray-300 pt-4">
-        Generated by <span className="font-bold">Ramadan Tracker</span>
+        {t("report.generatedBy")} <span className="font-bold">{t("app.title")}</span>
       </div>
     </div>
   );

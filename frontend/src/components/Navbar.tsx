@@ -5,9 +5,12 @@ import { usePathname } from "next/navigation";
 import { isLoggedIn, clearAuth, getUser, isAdmin } from "@/lib/auth";
 import { apiFetch } from "@/lib/api";
 import { useEffect, useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { type Locale } from "@/lib/i18n";
 
 export default function Navbar() {
   const pathname = usePathname();
+  const { locale, setLocale, t } = useLanguage();
   const [loggedIn, setLoggedIn] = useState(false);
   const [userName, setUserName] = useState("");
   const [admin, setAdmin] = useState(false);
@@ -30,22 +33,28 @@ export default function Navbar() {
 
   const navLinks = loggedIn
     ? [
-        { href: "/tracker", label: "Tracker" },
-        { href: "/dashboard", label: "Dashboard" },
-        { href: "/challenges", label: "Challenges" },
-        { href: "/family", label: "Family" },
-        { href: "/reports", label: "Reports" },
-        { href: "/settings", label: "Settings" },
-        ...(admin ? [{ href: "/admin", label: "Admin" }] : []),
+        { href: "/tracker", labelKey: "nav.tracker" },
+        { href: "/dashboard", labelKey: "nav.dashboard" },
+        { href: "/challenges", labelKey: "nav.challenges" },
+        { href: "/family", labelKey: "nav.family" },
+        { href: "/reports", labelKey: "nav.reports" },
+        { href: "/settings", labelKey: "nav.settings" },
+        ...(admin ? [{ href: "/admin", labelKey: "nav.admin" }] : []),
       ]
     : [];
+
+  const cycleLanguage = () => {
+    const order: Locale[] = ["en", "ar", "tr"];
+    const idx = order.indexOf(locale);
+    setLocale(order[(idx + 1) % order.length]);
+  };
 
   return (
     <nav className="border-b-2 border-line bg-white/80 backdrop-blur sticky top-0 z-50">
       <div className="mx-auto max-w-[1100px] px-4 flex items-center justify-between h-14">
         <Link href="/" className="font-extrabold text-xl tracking-wide flex items-center gap-2">
           <span className="font-ruqaa text-accent text-2xl">☪</span>
-          <span>Ramadan Tracker</span>
+          <span>{t("app.title")}</span>
         </Link>
 
         <div className="flex items-center gap-1">
@@ -59,22 +68,17 @@ export default function Navbar() {
                   : "hover:bg-gray-100"
               }`}
             >
-              {link.label}
+              {t(link.labelKey)}
             </Link>
           ))}
 
           {/* Language Toggle */}
           <button
-            onClick={() => {
-              const html = document.documentElement;
-              const isAr = html.getAttribute("lang") === "ar";
-              html.setAttribute("lang", isAr ? "en" : "ar");
-              html.setAttribute("dir", isAr ? "ltr" : "rtl");
-            }}
+            onClick={cycleLanguage}
             className="px-2 py-1 rounded-lg text-xs font-bold border border-line hover:bg-gray-100 transition"
-            title="Toggle AR/EN"
+            title={t("settings.language")}
           >
-            عر/EN
+            {locale.toUpperCase()}
           </button>
 
           {loggedIn ? (
@@ -82,15 +86,15 @@ export default function Navbar() {
               onClick={handleLogout}
               className="px-3 py-1.5 rounded-lg text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors ml-2"
             >
-              Logout
+              {t("nav.logout")}
             </button>
           ) : (
             <div className="flex gap-1 ml-2">
               <Link href="/login" className="px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-gray-100">
-                Login
+                {t("nav.login")}
               </Link>
               <Link href="/signup" className="px-3 py-1.5 rounded-lg text-sm font-semibold bg-ink text-white">
-                Sign Up
+                {t("nav.signup")}
               </Link>
             </div>
           )}
