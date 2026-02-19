@@ -9,7 +9,7 @@ export interface IUser extends Document {
   bio: string;
   avatarUrl: string | null;
   personalInfo: Record<string, unknown>;
-  language: "ar" | "en";
+  language: "ar" | "en" | "tr";
   timezoneIana: string;
   timezoneSource: "auto" | "manual";
   reminderEnabled: boolean;
@@ -30,7 +30,7 @@ const userSchema = new Schema<IUser>(
     bio: { type: String, default: "" },
     avatarUrl: { type: String, default: null },
     personalInfo: { type: Schema.Types.Mixed, default: {} },
-    language: { type: String, enum: ["ar", "en"], default: "en" },
+    language: { type: String, enum: ["ar", "en", "tr"], default: "en" },
     timezoneIana: { type: String, default: "Asia/Riyadh" },
     timezoneSource: { type: String, enum: ["auto", "manual"], default: "auto" },
     reminderEnabled: { type: Boolean, default: true },
