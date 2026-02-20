@@ -92,8 +92,7 @@ export default function Navbar() {
         {/* Logo */}
         <Link href="/" className="font-extrabold text-xl tracking-wide flex items-center gap-2 shrink-0">
           <span className="font-ruqaa text-accent text-2xl">☪</span>
-          <span className="hidden xs:inline">{t("app.title")}</span>
-          <span className="xs:hidden">RT</span>
+          <span>{t("app.title")}</span>
         </Link>
 
         {/* Desktop nav links — hidden on mobile */}
