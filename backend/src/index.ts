@@ -2,6 +2,7 @@ import path from "path";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
+import mongoSanitize from "express-mongo-sanitize";
 import dotenv from "dotenv";
 import { connectDB } from "./config/db";
 import { authRouter } from "./routes/auth";
@@ -32,7 +33,8 @@ app.use(cors({
     : true,
   credentials: true,
 }));
-app.use(express.json());
+app.use(express.json({ limit: "10kb" }));
+app.use(mongoSanitize({ replaceWith: "_" }));
 app.use(generalLimiter);
 app.use("/uploads", express.static("uploads"));
 
