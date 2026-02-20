@@ -109,14 +109,41 @@ authRouter.post("/signup", signupLimiter, async (req: Request, res: Response, ne
   }
 });
 
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCK_DURATION_MS = 30 * 60 * 1000; // 30 minutes
+
 authRouter.post("/login", loginLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const body = loginSchema.parse(req.body);
     const user = await User.findOne({ email: { $eq: body.email } });
+    // Always use the same error to prevent email enumeration
     if (!user) throw new AppError(401, "Invalid email or password");
 
+    // Account lockout check
+    if (user.isLocked()) {
+      const minutesLeft = Math.ceil(((user.lockUntil as Date).getTime() - Date.now()) / 60000);
+      throw new AppError(423, `Account temporarily locked. Try again in ${minutesLeft} minute${minutesLeft !== 1 ? "s" : ""}.`);
+    }
+
     const valid = await user.comparePassword(body.password);
-    if (!valid) throw new AppError(401, "Invalid email or password");
+    if (!valid) {
+      user.loginAttempts = (user.loginAttempts || 0) + 1;
+      if (user.loginAttempts >= MAX_LOGIN_ATTEMPTS) {
+        user.lockUntil = new Date(Date.now() + LOCK_DURATION_MS);
+        user.loginAttempts = 0;
+        await user.save();
+        throw new AppError(423, "Too many failed attempts. Account locked for 30 minutes.");
+      }
+      await user.save();
+      throw new AppError(401, "Invalid email or password");
+    }
+
+    // Successful login — reset lockout counters
+    if (user.loginAttempts > 0 || user.lockUntil) {
+      user.loginAttempts = 0;
+      user.lockUntil = null;
+      await user.save();
+    }
 
     // Auto-detect timezone if not set manually
     if (!user.timezoneIana || user.timezoneSource === "auto") {

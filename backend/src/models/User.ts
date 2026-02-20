@@ -16,9 +16,12 @@ export interface IUser extends Document {
   reminderTimeLocal: string;
   resetPasswordToken: string | null;
   resetPasswordExpires: Date | null;
+  loginAttempts: number;
+  lockUntil: Date | null;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidate: string): Promise<boolean>;
+  isLocked(): boolean;
 }
 
 const userSchema = new Schema<IUser>(
@@ -37,6 +40,8 @@ const userSchema = new Schema<IUser>(
     reminderTimeLocal: { type: String, default: "21:00" },
     resetPasswordToken: { type: String, default: null },
     resetPasswordExpires: { type: Date, default: null },
+    loginAttempts: { type: Number, default: 0 },
+    lockUntil: { type: Date, default: null },
   },
   { timestamps: true }
 );
@@ -50,6 +55,10 @@ userSchema.pre("save", async function (next) {
 
 userSchema.methods.comparePassword = async function (candidate: string): Promise<boolean> {
   return bcrypt.compare(candidate, this.passwordHash);
+};
+
+userSchema.methods.isLocked = function (): boolean {
+  return !!(this.lockUntil && this.lockUntil > new Date());
 };
 
 export const User = mongoose.model<IUser>("User", userSchema);
