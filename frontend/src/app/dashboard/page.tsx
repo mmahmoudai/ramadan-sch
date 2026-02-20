@@ -6,6 +6,17 @@ import { apiFetch } from "@/lib/api";
 import { getToken, isLoggedIn, getUser } from "@/lib/auth";
 import { useLanguage } from "@/contexts/LanguageContext";
 
+function timeAgo(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const diff = Date.now() - d.getTime();
+  if (diff < 60000) return "just now";
+  if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+  if (diff < 604800000) return `${Math.floor(diff / 86400000)}d ago`;
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
 interface DashboardFilters { from?: string; to?: string; }
 
 function ProgressRing({ percent, size = 100, stroke = 8, color }: { percent: number; size?: number; stroke?: number; color?: string }) {
@@ -84,6 +95,8 @@ export default function DashboardPage() {
   const [toDate, setToDate] = useState("");
   const [activePreset, setActivePreset] = useState<string | null>(null);
   const [user, setUser] = useState<ReturnType<typeof getUser>>(null);
+  const [gifts, setGifts] = useState<any[]>([]);
+  const [unseenGifts, setUnseenGifts] = useState(0);
 
   const loadDashboard = useCallback(async (filters: DashboardFilters = {}) => {
     try {
@@ -104,11 +117,32 @@ export default function DashboardPage() {
     } finally { setLoading(false); }
   }, [router, t]);
 
+  const loadGifts = useCallback(async () => {
+    try {
+      const token = getToken();
+      if (!token) return;
+      const data: any = await apiFetch("/me/gifts", { token });
+      setGifts(data.gifts || []);
+      setUnseenGifts(data.unseenCount || 0);
+    } catch {}
+  }, []);
+
+  const markGiftsSeen = useCallback(async () => {
+    try {
+      const token = getToken();
+      if (!token || unseenGifts === 0) return;
+      await apiFetch("/me/gifts/seen", { method: "PATCH", token });
+      setUnseenGifts(0);
+      setGifts((prev) => prev.map((g) => ({ ...g, seen: true })));
+    } catch {}
+  }, [unseenGifts]);
+
   useEffect(() => {
     if (!isLoggedIn()) { router.push("/login"); return; }
     setUser(getUser());
     loadDashboard();
-  }, [loadDashboard]);
+    loadGifts();
+  }, [loadDashboard, loadGifts]);
 
   const applyFilters = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -556,6 +590,61 @@ export default function DashboardPage() {
               </div>
             </div>
           )}
+
+          {/* Gifts Received */}
+          <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-bold text-sm flex items-center gap-2">
+                🎁 {t("dashboard.giftsReceived") || "Gifts Received"}
+                {unseenGifts > 0 && (
+                  <span className="bg-pink-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">{unseenGifts} new</span>
+                )}
+              </h2>
+              {unseenGifts > 0 && (
+                <button onClick={markGiftsSeen} className="text-[10px] text-indigo-600 font-semibold hover:underline">
+                  Mark all seen
+                </button>
+              )}
+            </div>
+            {gifts.length === 0 ? (
+              <div className="text-center py-4">
+                <div className="text-3xl mb-1">🎁</div>
+                <p className="text-xs text-gray-400">No gifts received yet</p>
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
+                {gifts.slice(0, 10).map((gift: any) => (
+                  <div key={gift._id} className={`flex items-start gap-2.5 rounded-xl p-2.5 border transition-all ${
+                    !gift.seen ? "bg-pink-50 border-pink-200" : "bg-gray-50 border-gray-100"
+                  }`}>
+                    <span className="text-xl shrink-0">{gift.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-xs font-bold truncate">{gift.title}</span>
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold shrink-0 ${
+                          gift.type === "gift" ? "bg-pink-100 text-pink-700" :
+                          gift.type === "badge" ? "bg-amber-100 text-amber-700" :
+                          "bg-indigo-100 text-indigo-700"
+                        }`}>{gift.type}</span>
+                        {!gift.seen && <span className="w-1.5 h-1.5 rounded-full bg-pink-500 shrink-0" />}
+                      </div>
+                      {gift.message && <p className="text-[10px] text-gray-500 mt-0.5 truncate">{gift.message}</p>}
+                      <div className="flex items-center gap-1 mt-0.5 text-[9px] text-gray-400">
+                        <span>from <b className="text-gray-600">{gift.fromUserId?.displayName}</b></span>
+                        {gift.familyId?.name && <span>· {gift.familyId.name}</span>}
+                        <span>· {timeAgo(gift.createdAt)}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {gifts.length > 0 && (
+              <button onClick={() => router.push("/family")} className="mt-2 w-full text-[10px] text-indigo-600 font-semibold hover:underline text-center">
+                View all in Family →
+              </button>
+            )}
+          </div>
 
           {/* Achievements */}
           <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">

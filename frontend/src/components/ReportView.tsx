@@ -9,6 +9,7 @@ interface ReportViewProps {
   entries: any[];
   owner: any;
   isPublic?: boolean;
+  giftsReceived?: any[];
 }
 
 function formatDate(dateStr: string): string {
@@ -78,7 +79,7 @@ function computeAchievements(entries: any[], overallScore: number, perfectDays: 
   ];
 }
 
-export default function ReportView({ report, entries, owner, isPublic = false }: ReportViewProps) {
+export default function ReportView({ report, entries, owner, isPublic = false, giftsReceived = [] }: ReportViewProps) {
   const { locale, t } = useLanguage();
 
   const stats = useMemo(() => {
@@ -261,6 +262,40 @@ export default function ReportView({ report, entries, owner, isPublic = false }:
           <div className="text-[10px] text-gray-500">{t("report.perfectDays")}</div>
         </div>
       </div>
+
+      {/* Gifts Received During This Period */}
+      {giftsReceived.length > 0 && (
+        <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
+          <h2 className="font-bold text-lg mb-4 flex items-center gap-2">🎁 Gifts Received</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {giftsReceived.map((gift: any) => (
+              <div key={gift._id} className={`flex items-start gap-3 rounded-xl p-3 border ${
+                gift.type === "gift" ? "bg-pink-50 border-pink-100" :
+                gift.type === "badge" ? "bg-amber-50 border-amber-100" :
+                "bg-indigo-50 border-indigo-100"
+              }`}>
+                <span className="text-3xl shrink-0">{gift.icon}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-bold text-sm">{gift.title}</span>
+                    <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${
+                      gift.type === "gift" ? "bg-pink-200 text-pink-700" :
+                      gift.type === "badge" ? "bg-amber-200 text-amber-700" :
+                      "bg-indigo-200 text-indigo-700"
+                    }`}>{gift.type}</span>
+                  </div>
+                  {gift.message && <p className="text-xs text-gray-600 mt-0.5">{gift.message}</p>}
+                  <div className="text-[10px] text-gray-400 mt-1 flex items-center gap-1">
+                    <span>from <b className="text-gray-600">{gift.fromUserId?.displayName}</b></span>
+                    {gift.familyId?.name && <span>· {gift.familyId.name}</span>}
+                    <span>· {new Date(gift.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Achievements */}
       {earnedAchievements.length > 0 && (

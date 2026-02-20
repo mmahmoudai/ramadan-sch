@@ -13,6 +13,7 @@ export default function PublicReportPage() {
   const [report, setReport] = useState<any>(null);
   const [entries, setEntries] = useState<any[]>([]);
   const [owner, setOwner] = useState<any>(null);
+  const [giftsReceived, setGiftsReceived] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -27,6 +28,7 @@ export default function PublicReportPage() {
       setReport(data.report);
       setEntries(data.entries || []);
       setOwner(data.owner);
+      setGiftsReceived(data.giftsReceived || []);
     } catch (err: any) {
       setError(err.message || t("report.notFound"));
     } finally {
@@ -45,5 +47,5 @@ export default function PublicReportPage() {
     </div>
   );
 
-  return <ReportView report={report} entries={entries} owner={owner} isPublic={true} />;
+  return <ReportView report={report} entries={entries} owner={owner} isPublic={true} giftsReceived={giftsReceived} />;
 }

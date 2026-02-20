@@ -15,6 +15,7 @@ export default function PrivateReportPage() {
   const [report, setReport] = useState<any>(null);
   const [entries, setEntries] = useState<any[]>([]);
   const [owner, setOwner] = useState<any>(null);
+  const [giftsReceived, setGiftsReceived] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -31,6 +32,7 @@ export default function PrivateReportPage() {
       setReport(data.report);
       setEntries(data.entries || []);
       setOwner(data.owner);
+      setGiftsReceived(data.giftsReceived || []);
     } catch (err: any) {
       setError(err.message || t("report.accessDenied"));
     } finally {
@@ -49,5 +51,5 @@ export default function PrivateReportPage() {
     </div>
   );
 
-  return <ReportView report={report} entries={entries} owner={owner} isPublic={false} />;
+  return <ReportView report={report} entries={entries} owner={owner} isPublic={false} giftsReceived={giftsReceived} />;
 }

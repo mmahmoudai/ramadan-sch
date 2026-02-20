@@ -525,7 +525,7 @@ export default function FamilyPage() {
                       </div>
 
                       {/* Stats Grid */}
-                      <div className="grid grid-cols-3 gap-2 mt-4">
+                      <div className="grid grid-cols-4 gap-2 mt-4">
                         <div className="text-center bg-gray-50 rounded-xl p-2.5">
                           <div className="text-lg font-bold">{member.stats.streak}</div>
                           <div className="text-[10px] text-gray-500">🔥 {t("family.streak")}</div>
@@ -537,6 +537,10 @@ export default function FamilyPage() {
                         <div className="text-center bg-gray-50 rounded-xl p-2.5">
                           <div className="text-lg font-bold">{member.stats.totalChallenges}</div>
                           <div className="text-[10px] text-gray-500">🎯 {t("family.challenges")}</div>
+                        </div>
+                        <div className="text-center bg-pink-50 rounded-xl p-2.5">
+                          <div className="text-lg font-bold text-pink-600">{member.stats.giftsReceived}</div>
+                          <div className="text-[10px] text-gray-500">🎁 {t("family.gifts") || "Gifts"}</div>
                         </div>
                       </div>
 

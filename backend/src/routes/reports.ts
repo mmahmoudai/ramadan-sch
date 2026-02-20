@@ -4,6 +4,7 @@ import { sanitizeStr } from "../utils/sanitize";
 import { Report } from "../models/Report";
 import { DailyEntry } from "../models/DailyEntry";
 import { User } from "../models/User";
+import { FamilyGift } from "../models/FamilyGift";
 import { VisibilityApproval } from "../models/VisibilityApproval";
 import { AuditLog } from "../models/AuditLog";
 import { requireAuth, AuthRequest } from "../middleware/auth";
@@ -24,10 +25,23 @@ reportsRouter.get("/public/:token", async (req: Request, res: Response, next: Ne
     const report = await Report.findOne({ publicToken: req.params.token, visibility: "public", revokedAt: null });
     if (!report) throw new AppError(404, "Report not found or revoked");
 
-    const entries = await DailyEntry.find({
-      userId: report.ownerUserId,
-      gregorianDate: { $gte: report.periodStart, $lte: report.periodEnd },
-    }).sort({ gregorianDate: 1 });
+    const periodStart = new Date(report.periodStart + "T00:00:00.000Z");
+    const periodEnd = new Date(report.periodEnd + "T23:59:59.999Z");
+
+    const [entries, giftsReceived] = await Promise.all([
+      DailyEntry.find({
+        userId: report.ownerUserId,
+        gregorianDate: { $gte: report.periodStart, $lte: report.periodEnd },
+      }).sort({ gregorianDate: 1 }),
+      FamilyGift.find({
+        toUserId: report.ownerUserId,
+        createdAt: { $gte: periodStart, $lte: periodEnd },
+      })
+        .populate("fromUserId", "displayName avatarUrl")
+        .populate("familyId", "name")
+        .sort({ createdAt: -1 })
+        .lean(),
+    ]);
 
     let owner = null;
     if (report.includeProfileInfo) {
@@ -37,7 +51,7 @@ reportsRouter.get("/public/:token", async (req: Request, res: Response, next: Ne
     report.accessLog.push({ viewerUserId: null, accessType: "public", accessedAt: new Date() });
     await report.save();
 
-    res.json({ report, entries, owner });
+    res.json({ report, entries, owner, giftsReceived });
   } catch (err) {
     next(err);
   }
@@ -83,10 +97,23 @@ reportsRouter.get("/:id", requireAuth, async (req: AuthRequest, res: Response, n
       if (!approval) throw new AppError(403, "Access denied");
     }
 
-    const entries = await DailyEntry.find({
-      userId: report.ownerUserId,
-      gregorianDate: { $gte: report.periodStart, $lte: report.periodEnd },
-    }).sort({ gregorianDate: 1 });
+    const periodStart = new Date(report.periodStart + "T00:00:00.000Z");
+    const periodEnd = new Date(report.periodEnd + "T23:59:59.999Z");
+
+    const [entries, giftsReceived] = await Promise.all([
+      DailyEntry.find({
+        userId: report.ownerUserId,
+        gregorianDate: { $gte: report.periodStart, $lte: report.periodEnd },
+      }).sort({ gregorianDate: 1 }),
+      FamilyGift.find({
+        toUserId: report.ownerUserId,
+        createdAt: { $gte: periodStart, $lte: periodEnd },
+      })
+        .populate("fromUserId", "displayName avatarUrl")
+        .populate("familyId", "name")
+        .sort({ createdAt: -1 })
+        .lean(),
+    ]);
 
     let owner = null;
     if (report.includeProfileInfo || isOwner || isAdmin) {
@@ -96,7 +123,7 @@ reportsRouter.get("/:id", requireAuth, async (req: AuthRequest, res: Response, n
     report.accessLog.push({ viewerUserId: req.user!.userId as any, accessType: "private", accessedAt: new Date() });
     await report.save();
 
-    res.json({ report, entries, owner });
+    res.json({ report, entries, owner, giftsReceived });
   } catch (err) {
     next(err);
   }

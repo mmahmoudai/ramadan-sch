@@ -5,6 +5,7 @@ import fs from "fs";
 import { z } from "zod";
 import { sanitizeStr } from "../utils/sanitize";
 import { User } from "../models/User";
+import { FamilyGift } from "../models/FamilyGift";
 import { requireAuth, AuthRequest } from "../middleware/auth";
 import { AppError } from "../middleware/errorHandler";
 
@@ -105,6 +106,33 @@ profileRouter.patch("/settings", requireAuth, async (req: AuthRequest, res: Resp
     const user = await User.findByIdAndUpdate(req.user!.userId, { $set: body }, { new: true }).select("-passwordHash -resetPasswordToken -resetPasswordExpires");
     if (!user) throw new AppError(404, "User not found");
     res.json({ user });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /me/gifts — all gifts received by the current user (across all families)
+profileRouter.get("/gifts", requireAuth, async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user!.userId;
+    const gifts = await FamilyGift.find({ toUserId: userId })
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .populate("fromUserId", "displayName avatarUrl")
+      .populate("familyId", "name")
+      .lean();
+    const unseenCount = await FamilyGift.countDocuments({ toUserId: userId, seen: false });
+    res.json({ gifts, unseenCount });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PATCH /me/gifts/seen — mark all received gifts as seen
+profileRouter.patch("/gifts/seen", requireAuth, async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    await FamilyGift.updateMany({ toUserId: req.user!.userId, seen: false }, { $set: { seen: true } });
+    res.json({ ok: true });
   } catch (err) {
     next(err);
   }
