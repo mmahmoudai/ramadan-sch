@@ -29,23 +29,10 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-function getInitialLocale(): Locale {
-  if (typeof window === "undefined") return "en";
-  try {
-    const saved = localStorage.getItem("language") as Locale | null;
-    if (saved && ALL_LOCALES.includes(saved)) return saved;
-  } catch {}
-  return "en";
-}
-
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>(getInitialLocale);
+  const [locale, setLocaleState] = useState<Locale>("en");
   const [enabledLanguages, setEnabledLanguages] = useState<Locale[]>(ALL_LOCALES);
   const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const reloadEnabledLanguages = useCallback(async () => {
     try {
@@ -65,17 +52,25 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // On mount: load enabled languages (locale already set from localStorage above)
+  // On mount: read saved locale from localStorage, then load enabled languages
   useEffect(() => {
+    try {
+      const saved = localStorage.getItem("language") as Locale | null;
+      if (saved && ALL_LOCALES.includes(saved)) {
+        setLocaleState(saved);
+      }
+    } catch {}
     reloadEnabledLanguages();
+    setMounted(true);
   }, [reloadEnabledLanguages]);
 
-  // Update HTML lang and dir attributes when locale changes
+  // Update HTML lang and dir attributes when locale changes (client only)
   useEffect(() => {
+    if (!mounted) return;
     document.documentElement.lang = locale;
     document.documentElement.dir = getDirection(locale);
     try { localStorage.setItem("language", locale); } catch {}
-  }, [locale]);
+  }, [locale, mounted]);
 
   const setLocale = useCallback((newLocale: Locale) => {
     if (enabledLanguages.includes(newLocale)) {
@@ -83,11 +78,14 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     }
   }, [enabledLanguages]);
 
+  // Always use "en" for SSR/first render to match server output, switch after mount
+  const activeLocale = mounted ? locale : "en";
+
   const value: LanguageContextType = {
-    locale,
+    locale: activeLocale,
     setLocale,
-    t: (key: string) => t(key, locale),
-    dir: getDirection(locale),
+    t: (key: string) => t(key, activeLocale),
+    dir: getDirection(activeLocale),
     enabledLanguages,
     reloadEnabledLanguages,
   };
