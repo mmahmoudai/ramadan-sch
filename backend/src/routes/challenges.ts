@@ -3,6 +3,7 @@ import { z } from "zod";
 import { Challenge } from "../models/Challenge";
 import { requireAuth, AuthRequest } from "../middleware/auth";
 import { AppError } from "../middleware/errorHandler";
+import { getHijriChallengePeriodMetadata } from "../utils/hijri";
 
 export const challengesRouter = Router();
 
@@ -85,27 +86,51 @@ challengesRouter.post("/:id/progress", requireAuth, async (req: AuthRequest, res
     const challenge = await Challenge.findOne({ _id: req.params.id, userId: req.user!.userId });
     if (!challenge) throw new AppError(404, "Challenge not found");
 
-    // Calculate periodIndex based on scope and date
-    const date = new Date(body.dateGregorian);
-    let periodIndex: number;
-    if (challenge.scope === "daily") {
-      periodIndex = Math.floor(date.getTime() / (1000 * 60 * 60 * 24));
-    } else if (challenge.scope === "weekly") {
-      periodIndex = Math.floor(date.getTime() / (1000 * 60 * 60 * 24 * 7));
-    } else {
-      periodIndex = date.getFullYear() * 12 + date.getMonth();
+    let periodMetadata: ReturnType<typeof getHijriChallengePeriodMetadata>;
+    try {
+      periodMetadata = getHijriChallengePeriodMetadata(body.dateGregorian, challenge.scope);
+    } catch {
+      throw new AppError(400, "Invalid dateGregorian. Expected YYYY-MM-DD.");
     }
 
     const existingIdx = challenge.progress.findIndex(
       (p) => p.dateGregorian === body.dateGregorian
     );
 
+    const hasPeriod = challenge.periods.some(
+      (period) =>
+        period.hijriYear === periodMetadata.hijriYear &&
+        (period.hijriMonth ?? null) === periodMetadata.hijriMonth &&
+        (period.hijriDay ?? null) === periodMetadata.hijriDay &&
+        (period.hijriWeekIndex ?? null) === periodMetadata.hijriWeekIndex &&
+        period.startDateGregorian === periodMetadata.startDateGregorian &&
+        period.endDateGregorian === periodMetadata.endDateGregorian
+    );
+
+    if (!hasPeriod) {
+      challenge.periods.push({
+        hijriYear: periodMetadata.hijriYear,
+        hijriMonth: periodMetadata.hijriMonth,
+        hijriDay: periodMetadata.hijriDay,
+        hijriWeekIndex: periodMetadata.hijriWeekIndex,
+        startDateGregorian: periodMetadata.startDateGregorian,
+        endDateGregorian: periodMetadata.endDateGregorian,
+      });
+      challenge.periods.sort((a, b) => a.startDateGregorian.localeCompare(b.startDateGregorian));
+    }
+
     const progressEntry = {
-      periodIndex,
+      periodIndex: periodMetadata.periodIndex,
       dateGregorian: body.dateGregorian,
       progressValue: body.progressValue,
       notes: body.notes,
       completed: body.completed,
+      hijriYear: periodMetadata.hijriYear,
+      hijriMonth: periodMetadata.hijriMonth,
+      hijriDay: periodMetadata.hijriDay,
+      hijriWeekIndex: periodMetadata.hijriWeekIndex,
+      periodStartGregorian: periodMetadata.startDateGregorian,
+      periodEndGregorian: periodMetadata.endDateGregorian,
     };
 
     if (existingIdx >= 0) {
@@ -127,10 +152,10 @@ challengesRouter.delete("/:id/progress/:date", requireAuth, async (req: AuthRequ
     if (!challenge) throw new AppError(404, "Challenge not found");
 
     // Only allow deleting past dates (not today or future)
-    const progressDate = new Date(req.params.date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    if (progressDate >= today) {
+    // Use string comparison — dates are stored as "YYYY-MM-DD" strings
+    const n = new Date();
+    const todayStr = `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`;
+    if (req.params.date >= todayStr) {
       throw new AppError(400, "Cannot delete progress for today or future dates");
     }
 

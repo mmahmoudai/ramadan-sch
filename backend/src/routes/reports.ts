@@ -116,6 +116,19 @@ reportsRouter.post("/:id/revoke", requireAuth, async (req: AuthRequest, res: Res
   }
 });
 
+reportsRouter.delete("/:id", requireAuth, async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const report = await Report.findOneAndDelete({ _id: req.params.id, ownerUserId: req.user!.userId });
+    if (!report) throw new AppError(404, "Report not found");
+
+    await AuditLog.create({ actorUserId: req.user!.userId, action: "report_delete", targetType: "report", targetId: req.params.id });
+
+    res.json({ message: "Report deleted" });
+  } catch (err) {
+    next(err);
+  }
+});
+
 reportsRouter.post("/:id/share-link", requireAuth, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const report = await Report.findOne({ _id: req.params.id, ownerUserId: req.user!.userId });

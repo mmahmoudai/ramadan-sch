@@ -3,6 +3,7 @@ import mongoose, { Schema, Document } from "mongoose";
 export interface IChallengePeriod {
   hijriYear: number;
   hijriMonth: number | null;
+  hijriDay: number | null;
   hijriWeekIndex: number | null;
   startDateGregorian: string;
   endDateGregorian: string;
@@ -14,6 +15,12 @@ export interface IChallengeProgress {
   progressValue: number;
   notes: string;
   completed: boolean;
+  hijriYear: number | null;
+  hijriMonth: number | null;
+  hijriDay: number | null;
+  hijriWeekIndex: number | null;
+  periodStartGregorian: string | null;
+  periodEndGregorian: string | null;
 }
 
 export interface IChallenge extends Document {
@@ -32,6 +39,7 @@ const challengePeriodSchema = new Schema<IChallengePeriod>(
   {
     hijriYear: { type: Number, required: true },
     hijriMonth: { type: Number, default: null },
+    hijriDay: { type: Number, default: null },
     hijriWeekIndex: { type: Number, default: null },
     startDateGregorian: { type: String, required: true },
     endDateGregorian: { type: String, required: true },
@@ -46,6 +54,12 @@ const challengeProgressSchema = new Schema<IChallengeProgress>(
     progressValue: { type: Number, default: 0 },
     notes: { type: String, default: "" },
     completed: { type: Boolean, default: false },
+    hijriYear: { type: Number, default: null },
+    hijriMonth: { type: Number, default: null },
+    hijriDay: { type: Number, default: null },
+    hijriWeekIndex: { type: Number, default: null },
+    periodStartGregorian: { type: String, default: null },
+    periodEndGregorian: { type: String, default: null },
   },
   { _id: false }
 );

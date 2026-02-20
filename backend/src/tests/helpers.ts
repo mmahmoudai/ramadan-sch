@@ -10,6 +10,7 @@ import { dashboardRouter } from "../routes/dashboard";
 import { commentsRouter } from "../routes/comments";
 import { visibilityRouter } from "../routes/visibility";
 import { reminderRouter } from "../routes/reminders";
+import { adminRouter } from "../routes/admin";
 import { errorHandler } from "../middleware/errorHandler";
 
 export function createApp() {
@@ -31,6 +32,7 @@ export function createApp() {
   app.use("/comments", commentsRouter);
   app.use("/visibility", visibilityRouter);
   app.use("/reminders", reminderRouter);
+  app.use("/admin", adminRouter);
 
   app.use(errorHandler);
   return app;

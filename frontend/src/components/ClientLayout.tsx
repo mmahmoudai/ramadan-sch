@@ -7,7 +7,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   const { locale } = useLanguage();
   
   return (
-    <div key={locale}>
+    <div>
       <Navbar />
       <main className="mx-auto max-w-[1100px] w-[96vw] my-6 p-4">
         {children}
