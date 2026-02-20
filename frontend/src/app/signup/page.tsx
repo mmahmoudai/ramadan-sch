@@ -19,6 +19,9 @@ export default function SignupPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    if (password.length < 8) { setError("Password must be at least 8 characters"); return; }
+    if (!/[A-Z]/.test(password)) { setError("Password must contain at least one uppercase letter"); return; }
+    if (!/[0-9]/.test(password)) { setError("Password must contain at least one number"); return; }
     setLoading(true);
     try {
       const data: any = await apiFetch("/auth/signup", {
@@ -38,7 +41,9 @@ export default function SignupPage() {
     <div className="max-w-md mx-auto mt-12">
       <div className="border-2 border-line rounded-2xl bg-card p-8">
         <h1 className="text-2xl font-extrabold text-center mb-6">{t("auth.createAccount")}</h1>
-        {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 mb-4 text-sm">{error}</div>}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 mb-4 text-sm whitespace-pre-line">{error}</div>
+        )}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-semibold mb-1">{t("auth.displayName")}</label>
@@ -49,8 +54,9 @@ export default function SignupPage() {
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full border-2 border-line rounded-lg px-3 py-2 focus:outline-none focus:border-accent" />
           </div>
           <div>
-            <label className="block text-sm font-semibold mb-1">{t("auth.passwordMin")}</label>
+            <label className="block text-sm font-semibold mb-1">{t("auth.password")}</label>
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} className="w-full border-2 border-line rounded-lg px-3 py-2 focus:outline-none focus:border-accent" />
+            <p className="text-xs text-gray-400 mt-1">Min 8 characters, one uppercase letter, one number</p>
           </div>
           <button type="submit" disabled={loading} className="w-full bg-ink text-white py-2.5 rounded-lg font-bold hover:opacity-90 transition disabled:opacity-50">
             {loading ? t("auth.creating") : t("nav.signup")}

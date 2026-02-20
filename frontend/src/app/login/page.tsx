@@ -38,7 +38,9 @@ export default function LoginPage() {
     <div className="max-w-md mx-auto mt-12">
       <div className="border-2 border-line rounded-2xl bg-card p-8">
         <h1 className="text-2xl font-extrabold text-center mb-6">{t("nav.login")}</h1>
-        {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 mb-4 text-sm">{error}</div>}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 mb-4 text-sm whitespace-pre-line">{error}</div>
+        )}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-semibold mb-1">{t("auth.email")}</label>

@@ -35,7 +35,15 @@ function ResetPasswordContent() {
     }
 
     if (newPassword.length < 8) {
-      setError(t("auth.passwordMin"));
+      setError("Password must be at least 8 characters");
+      return;
+    }
+    if (!/[A-Z]/.test(newPassword)) {
+      setError("Password must contain at least one uppercase letter");
+      return;
+    }
+    if (!/[0-9]/.test(newPassword)) {
+      setError("Password must contain at least one number");
       return;
     }
 
@@ -59,7 +67,9 @@ function ResetPasswordContent() {
       <div className="border-2 border-line rounded-2xl bg-card p-8">
         <h1 className="text-2xl font-extrabold text-center mb-6">{t("auth.resetPasswordTitle")}</h1>
 
-        {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 mb-4 text-sm">{error}</div>}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 mb-4 text-sm whitespace-pre-line">{error}</div>
+        )}
         {message && <div className="bg-green-50 border border-green-200 text-green-700 rounded-lg p-3 mb-4 text-sm">{message}</div>}
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -73,6 +83,7 @@ function ResetPasswordContent() {
               required
               className="w-full border-2 border-line rounded-lg px-3 py-2 focus:outline-none focus:border-accent"
             />
+            <p className="text-xs text-gray-400 mt-1">Min 8 characters, one uppercase letter, one number</p>
           </div>
 
           <div>

@@ -64,6 +64,13 @@ export async function apiFetch<T = unknown>(path: string, options: FetchOptions 
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ error: res.statusText }));
+    // Surface Zod validation details as a readable message
+    if (body.details && Array.isArray(body.details) && body.details.length > 0) {
+      const msg = body.details.map((d: { path: string; message: string }) =>
+        d.path ? `${d.path}: ${d.message}` : d.message
+      ).join("\n");
+      throw new Error(msg);
+    }
     throw new Error(body.error || `API error: ${res.status}`);
   }
 
