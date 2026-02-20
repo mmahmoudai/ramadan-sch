@@ -14,6 +14,7 @@ import { EntityDetail } from "./components/EntityDetail";
 import { UserDetailPanel } from "./components/UserDetailPanel";
 import { UserEntitiesModal } from "./components/UserEntitiesModal";
 import { GlobalSettingsPanel } from "./components/GlobalSettingsPanel";
+import { LanguagesPanel } from "./components/LanguagesPanel";
 import {
   RoleFilter, LanguageFilter, ReminderFilter, AdminEntityTab,
   OverviewFilters, UserListFilters,
@@ -454,6 +455,9 @@ export default function AdminPage() {
 
       {/* ── Global Settings ───────────────────────────────────────────────── */}
       <GlobalSettingsPanel onToast={showToast} />
+
+      {/* ── Language Control ──────────────────────────────────────────────── */}
+      <LanguagesPanel onToast={showToast} />
 
       {/* ── Overview ─────────────────────────────────────────────────────── */}
       <section className="border-2 border-line rounded-xl p-4 space-y-4">

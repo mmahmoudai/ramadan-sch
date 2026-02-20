@@ -10,7 +10,7 @@ import { type Locale } from "@/lib/i18n";
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { locale, setLocale, t } = useLanguage();
+  const { locale, setLocale, t, enabledLanguages } = useLanguage();
   const [loggedIn, setLoggedIn] = useState(false);
   const [userName, setUserName] = useState("");
   const [admin, setAdmin] = useState(false);
@@ -69,7 +69,7 @@ export default function Navbar() {
       ]
     : [];
 
-  const languageOptions: Locale[] = ["en", "ar", "tr"];
+  const languageOptions = enabledLanguages;
 
   const handleLanguageSelect = (nextLocale: Locale) => {
     setLocale(nextLocale);

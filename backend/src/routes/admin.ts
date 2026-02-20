@@ -2135,11 +2135,19 @@ adminRouter.get("/audit", async (req: AuthRequest, res: Response, next: NextFunc
   }
 });
 
+const ALL_LOCALES = ["en", "ar", "tr"] as const;
+type SupportedLocale = typeof ALL_LOCALES[number];
+
+async function getFullConfig() {
+  const emailRemindersEnabled = await getConfig("emailRemindersEnabled", true);
+  const enabledLanguages = await getConfig("enabledLanguages", ["en", "ar", "tr"]);
+  return { emailRemindersEnabled, enabledLanguages };
+}
+
 // GET /admin/config — get global app configuration
 adminRouter.get("/config", async (_req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const emailRemindersEnabled = await getConfig("emailRemindersEnabled", true);
-    res.json({ config: { emailRemindersEnabled } });
+    res.json({ config: await getFullConfig() });
   } catch (err) {
     next(err);
   }
@@ -2159,6 +2167,22 @@ adminRouter.patch("/config", adminMutationLimiter, async (req: AuthRequest, res:
       updated.emailRemindersEnabled = payload.emailRemindersEnabled;
     }
 
+    if (Object.prototype.hasOwnProperty.call(payload, "enabledLanguages")) {
+      const langs = payload.enabledLanguages;
+      if (!Array.isArray(langs) || langs.length === 0) {
+        throw new AppError(400, "enabledLanguages must be a non-empty array");
+      }
+      const invalid = langs.filter((l) => !ALL_LOCALES.includes(l as SupportedLocale));
+      if (invalid.length > 0) {
+        throw new AppError(400, `Invalid language codes: ${invalid.join(", ")}`);
+      }
+      if (langs.length < 1) {
+        throw new AppError(400, "At least one language must remain enabled");
+      }
+      await setConfig("enabledLanguages", langs);
+      updated.enabledLanguages = langs;
+    }
+
     if (Object.keys(updated).length === 0) {
       throw new AppError(400, "No valid config keys provided");
     }
@@ -2171,8 +2195,7 @@ adminRouter.patch("/config", adminMutationLimiter, async (req: AuthRequest, res:
       metadata: { updated },
     });
 
-    const emailRemindersEnabled = await getConfig("emailRemindersEnabled", true);
-    res.json({ config: { emailRemindersEnabled } });
+    res.json({ config: await getFullConfig() });
   } catch (err) {
     next(err);
   }

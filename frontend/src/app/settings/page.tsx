@@ -18,7 +18,7 @@ const ALL_TIMEZONES: string[] = (() => {
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { setLocale, t } = useLanguage();
+  const { setLocale, t, enabledLanguages } = useLanguage();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -194,9 +194,9 @@ export default function SettingsPage() {
               onChange={(e) => setLanguageState(e.target.value)}
               className="w-full border-2 border-line rounded-lg px-3 py-2 focus:outline-none focus:border-ink transition"
             >
-              <option value="en">English</option>
-              <option value="ar">العربية (Arabic)</option>
-              <option value="tr">Türkçe (Turkish)</option>
+              {enabledLanguages.includes("en") && <option value="en">English</option>}
+              {enabledLanguages.includes("ar") && <option value="ar">العربية (Arabic)</option>}
+              {enabledLanguages.includes("tr") && <option value="tr">Türkçe (Turkish)</option>}
             </select>
           </div>
 
