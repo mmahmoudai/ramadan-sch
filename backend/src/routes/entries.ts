@@ -38,7 +38,12 @@ function getTimezoneOffsetMs(tz: string, date: Date): number {
 
 entriesRouter.get("/", requireAuth, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const { from, to } = req.query;
+    const from = typeof req.query.from === "string" ? req.query.from : undefined;
+    const to = typeof req.query.to === "string" ? req.query.to : undefined;
+    const dateRe = /^\d{4}-\d{2}-\d{2}$/;
+    if (from && !dateRe.test(from)) throw new AppError(400, "Invalid 'from' date format");
+    if (to && !dateRe.test(to)) throw new AppError(400, "Invalid 'to' date format");
+
     const filter: Record<string, unknown> = { userId: req.user!.userId };
     if (from || to) {
       filter.gregorianDate = {};

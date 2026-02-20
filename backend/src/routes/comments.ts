@@ -34,7 +34,8 @@ function getVisibilityScopeForTarget(targetType: string): "dashboard" | "reports
 
 commentsRouter.get("/:targetType/:targetId", requireAuth, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const { targetType, targetId } = req.params;
+    const targetType = z.enum(ALLOWED_TARGET_TYPES).parse(req.params.targetType);
+    const targetId = z.string().min(1).max(100).parse(req.params.targetId);
     const comments = await Comment.find({
       targetType,
       targetId,
@@ -157,7 +158,8 @@ commentsRouter.post("/reactions", requireAuth, async (req: AuthRequest, res: Res
 
 commentsRouter.get("/reactions/:targetType/:targetId", requireAuth, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const { targetType, targetId } = req.params;
+    const targetType = z.enum(ALLOWED_TARGET_TYPES).parse(req.params.targetType);
+    const targetId = z.string().min(1).max(100).parse(req.params.targetId);
     const reactions = await Reaction.find({ targetType, targetId }).populate("authorUserId", "displayName avatarUrl");
     res.json({ reactions });
   } catch (err) {

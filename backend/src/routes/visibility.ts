@@ -50,10 +50,13 @@ visibilityRouter.post("/request", requireAuth, async (req: AuthRequest, res: Res
   }
 });
 
+const respondSchema = z.object({
+  action: z.enum(["approved", "rejected"]),
+});
+
 visibilityRouter.post("/approvals/:id/respond", requireAuth, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const { action } = req.body;
-    if (!["approved", "rejected"].includes(action)) throw new AppError(400, "Action must be 'approved' or 'rejected'");
+    const { action } = respondSchema.parse(req.body);
 
     const approval = await VisibilityApproval.findOne({ _id: req.params.id, ownerUserId: req.user!.userId });
     if (!approval) throw new AppError(404, "Approval not found or not owner");
