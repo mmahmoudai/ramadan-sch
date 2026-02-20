@@ -23,6 +23,11 @@ const reactionSchema = z.object({
   reactionType: z.string().min(1).max(50),
 });
 
+function getVisibilityScopeForTarget(targetType: string): "dashboard" | "reports" {
+  const normalized = targetType.toLowerCase();
+  return normalized.includes("report") ? "reports" : "dashboard";
+}
+
 commentsRouter.get("/:targetType/:targetId", requireAuth, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { targetType, targetId } = req.params;
@@ -48,12 +53,14 @@ commentsRouter.post("/", requireAuth, async (req: AuthRequest, res: Response, ne
     const body = commentSchema.parse(req.body);
 
     if (body.ownerUserId !== req.user!.userId) {
+      const scope = getVisibilityScopeForTarget(body.targetType);
       const approval = await VisibilityApproval.findOne({
         ownerUserId: body.ownerUserId,
         viewerUserId: req.user!.userId,
+        scope,
         status: "approved",
       });
-      if (!approval) throw new AppError(403, "Not approved to comment on this user's content");
+      if (!approval) throw new AppError(403, `Not approved to comment on this user's ${scope} content`);
     }
 
     const comment = new Comment({
@@ -108,12 +115,14 @@ commentsRouter.post("/reactions", requireAuth, async (req: AuthRequest, res: Res
     const body = reactionSchema.parse(req.body);
 
     if (body.ownerUserId !== req.user!.userId) {
+      const scope = getVisibilityScopeForTarget(body.targetType);
       const approval = await VisibilityApproval.findOne({
         ownerUserId: body.ownerUserId,
         viewerUserId: req.user!.userId,
+        scope,
         status: "approved",
       });
-      if (!approval) throw new AppError(403, "Not approved to react on this user's content");
+      if (!approval) throw new AppError(403, `Not approved to react on this user's ${scope} content`);
     }
 
     const existing = await Reaction.findOne({

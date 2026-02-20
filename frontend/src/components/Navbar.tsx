@@ -15,6 +15,7 @@ export default function Navbar() {
   const [userName, setUserName] = useState("");
   const [admin, setAdmin] = useState(false);
   const [langMenuOpen, setLangMenuOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const langMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -24,17 +25,21 @@ export default function Navbar() {
     if (u) setUserName(u.displayName);
   }, [pathname]);
 
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileOpen(false);
+    setLangMenuOpen(false);
+  }, [pathname]);
+
   useEffect(() => {
     const onDocumentMouseDown = (event: MouseEvent) => {
       if (langMenuRef.current && !langMenuRef.current.contains(event.target as Node)) {
         setLangMenuOpen(false);
       }
     };
-
     const onEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setLangMenuOpen(false);
+      if (event.key === "Escape") { setLangMenuOpen(false); setMobileOpen(false); }
     };
-
     document.addEventListener("mousedown", onDocumentMouseDown);
     document.addEventListener("keydown", onEscape);
     return () => {
@@ -54,13 +59,13 @@ export default function Navbar() {
 
   const navLinks = loggedIn
     ? [
-        { href: "/tracker", labelKey: "nav.tracker" },
-        { href: "/dashboard", labelKey: "nav.dashboard" },
-        { href: "/challenges", labelKey: "nav.challenges" },
-        { href: "/family", labelKey: "nav.family" },
-        { href: "/reports", labelKey: "nav.reports" },
-        { href: "/settings", labelKey: "nav.settings" },
-        ...(admin ? [{ href: "/admin", labelKey: "nav.admin" }] : []),
+        { href: "/tracker", labelKey: "nav.tracker", icon: "📝" },
+        { href: "/dashboard", labelKey: "nav.dashboard", icon: "📊" },
+        { href: "/challenges", labelKey: "nav.challenges", icon: "🎯" },
+        { href: "/family", labelKey: "nav.family", icon: "👨‍👩‍👧" },
+        { href: "/reports", labelKey: "nav.reports", icon: "📋" },
+        { href: "/settings", labelKey: "nav.settings", icon: "⚙️" },
+        ...(admin ? [{ href: "/admin", labelKey: "nav.admin", icon: "🛡️" }] : []),
       ]
     : [];
 
@@ -75,54 +80,55 @@ export default function Navbar() {
     const displays = {
       en: { code: "EN", flag: "🇺🇸", name: "English" },
       ar: { code: "AR", flag: "🇸🇦", name: "العربية" },
-      tr: { code: "TR", flag: "🇹🇷", name: "Türkçe" }
+      tr: { code: "TR", flag: "🇹🇷", name: "Türkçe" },
     };
     return displays[loc];
   };
 
   return (
-    <nav className="border-b-2 border-line bg-white/80 backdrop-blur sticky top-0 z-50">
+    <nav className="border-b-2 border-line bg-white/90 backdrop-blur sticky top-0 z-50">
+      {/* Desktop + Mobile top bar */}
       <div className="mx-auto max-w-[1100px] px-4 flex items-center justify-between h-14">
-        <Link href="/" className="font-extrabold text-xl tracking-wide flex items-center gap-2">
+        {/* Logo */}
+        <Link href="/" className="font-extrabold text-xl tracking-wide flex items-center gap-2 shrink-0">
           <span className="font-ruqaa text-accent text-2xl">☪</span>
           <span>{t("app.title")}</span>
         </Link>
 
-        <div className="flex items-center gap-1">
+        {/* Desktop nav links — hidden on mobile */}
+        <div className="hidden md:flex items-center gap-0.5 flex-1 justify-center px-4">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
-                pathname === link.href
-                  ? "bg-ink text-white"
-                  : "hover:bg-gray-100"
+              className={`px-2.5 py-1.5 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap ${
+                pathname === link.href ? "bg-ink text-white" : "hover:bg-gray-100"
               }`}
             >
               {t(link.labelKey)}
             </Link>
           ))}
+        </div>
 
+        {/* Right side: lang + logout (desktop) + hamburger (mobile) */}
+        <div className="flex items-center gap-1 shrink-0">
           {/* Language Toggle */}
           <div ref={langMenuRef} className="relative">
             <button
               type="button"
               onClick={() => setLangMenuOpen((v) => !v)}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-semibold border border-line hover:bg-gray-100 transition-all duration-200 hover:shadow-sm"
-              title={`${t("settings.language")}: ${getLanguageDisplay(locale).name}`}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-sm font-semibold border border-line hover:bg-gray-100 transition-all"
               aria-haspopup="menu"
               aria-expanded={langMenuOpen}
             >
               <span className="text-base">{getLanguageDisplay(locale).flag}</span>
-              <span className="hidden sm:inline">{getLanguageDisplay(locale).code}</span>
-              <svg className={`w-3 h-3 opacity-70 transition-transform duration-200 ${langMenuOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <span className="hidden sm:inline text-xs">{getLanguageDisplay(locale).code}</span>
+              <svg className={`w-3 h-3 opacity-60 transition-transform ${langMenuOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </button>
-            
-            {/* Dropdown showing all languages */}
-            <div className={`absolute top-full mt-1 right-0 bg-white border border-line rounded-lg shadow-lg p-2 z-50 min-w-[150px] transition-all duration-150 ${langMenuOpen ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-1 pointer-events-none"}`}>
-              <div className="text-xs font-semibold text-gray-500 mb-1">{t("settings.language")}</div>
+            <div className={`absolute top-full mt-1 right-0 bg-white border border-line rounded-xl shadow-lg p-2 z-50 min-w-[150px] transition-all duration-150 ${langMenuOpen ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-1 pointer-events-none"}`}>
+              <div className="text-xs font-semibold text-gray-500 mb-1 px-1">{t("settings.language")}</div>
               {languageOptions.map((lang) => {
                 const display = getLanguageDisplay(lang as Locale);
                 return (
@@ -130,7 +136,7 @@ export default function Navbar() {
                     key={lang}
                     type="button"
                     onClick={() => handleLanguageSelect(lang as Locale)}
-                    className={`w-full flex items-center gap-2 px-2 py-1 rounded text-sm text-left transition-colors ${
+                    className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-left transition-colors ${
                       lang === locale ? "bg-accent text-white" : "hover:bg-gray-100"
                     }`}
                   >
@@ -147,15 +153,16 @@ export default function Navbar() {
             </div>
           </div>
 
+          {/* Logout — desktop only */}
           {loggedIn ? (
             <button
               onClick={handleLogout}
-              className="px-3 py-1.5 rounded-lg text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors ml-2"
+              className="hidden md:block px-3 py-1.5 rounded-lg text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors"
             >
               {t("nav.logout")}
             </button>
           ) : (
-            <div className="flex gap-1 ml-2">
+            <div className="hidden md:flex gap-1">
               <Link href="/login" className="px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-gray-100">
                 {t("nav.login")}
               </Link>
@@ -164,8 +171,73 @@ export default function Navbar() {
               </Link>
             </div>
           )}
+
+          {/* Hamburger — mobile only */}
+          <button
+            onClick={() => setMobileOpen((v) => !v)}
+            className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            aria-label="Toggle menu"
+          >
+            {mobileOpen ? (
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            )}
+          </button>
         </div>
       </div>
+
+      {/* Mobile drawer */}
+      {mobileOpen && (
+        <div className="md:hidden border-t border-line bg-white shadow-lg">
+          <div className="px-4 py-3 space-y-1">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileOpen(false)}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-colors ${
+                  pathname === link.href
+                    ? "bg-ink text-white"
+                    : "hover:bg-gray-100 text-gray-700"
+                }`}
+              >
+                <span className="text-lg">{link.icon}</span>
+                {t(link.labelKey)}
+              </Link>
+            ))}
+
+            {/* Divider */}
+            {loggedIn && <div className="border-t border-gray-100 my-2" />}
+
+            {/* Auth actions */}
+            {loggedIn ? (
+              <button
+                onClick={() => { setMobileOpen(false); handleLogout(); }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors"
+              >
+                <span className="text-lg">🚪</span>
+                {t("nav.logout")}
+              </button>
+            ) : (
+              <>
+                <Link href="/login" onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold hover:bg-gray-100">
+                  <span className="text-lg">🔑</span> {t("nav.login")}
+                </Link>
+                <Link href="/signup" onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold bg-ink text-white">
+                  <span className="text-lg">✨</span> {t("nav.signup")}
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </nav>
   );
 }

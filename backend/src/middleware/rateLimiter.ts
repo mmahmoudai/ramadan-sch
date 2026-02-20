@@ -15,3 +15,11 @@ export const generalLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+export const adminMutationLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 300,
+  message: { error: "Too many admin actions, please retry shortly" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});

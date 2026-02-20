@@ -60,7 +60,7 @@
 - [x] `P1` Add challenge progress updates and completion logic.
 - [x] `P1` Add challenge archive/deactivate flow.
 - [x] `P0` Build challenges frontend page.
-- [ ] `P0` Build Hijri-based period generation for challenge scopes.
+- [x] `P0` Build Hijri-based period generation for challenge scopes.
 - [ ] `P1` Add challenge reporting aggregation.
 
 ## 6) Dashboard Analytics
@@ -69,7 +69,7 @@
 - [x] `P1` Add streak and consistency metrics.
 - [x] `P1` Add challenge progress widgets.
 - [x] `P0` Build dashboard frontend page.
-- [ ] `P1` Add dashboard date filters.
+- [x] `P1` Add dashboard date filters.
 
 ## 7) Family Sharing & Visibility Approvals
 - [x] `P0` Implement family group create/invite/join.
@@ -77,7 +77,7 @@
 - [x] `P0` Enforce visibility rules in APIs and UI.
 - [x] `P0` Build family frontend page.
 - [x] `P1` Add audit logs for approval changes.
-- [ ] `P1` Build family activity feed.
+- [x] `P1` Build family activity feed.
 
 ## 8) Comments & Reactions
 - [x] `P0` Implement reactions on shared items.
@@ -121,7 +121,7 @@
 ## 13) QA & Release
 - [x] `P0` Unit tests for lock logic (5 tests) and challenge model (5 tests).
 - [x] `P0` Integration tests for auth (10), tracker (7), report (9) APIs — 36/36 passing.
-- [ ] `P0` E2E tests for core journeys.
+- [x] `P0` E2E tests for core journeys.
 - [ ] `P1` Performance test dashboard and report endpoints.
 - [ ] `P1` Staging UAT pass with Arabic and English.
 - [ ] `P0` Production deployment and rollback plan validated.
@@ -146,3 +146,98 @@
 - [x] Reminder emails at 9:00 PM local confirmed.
 - [x] AR/EN and RTL quality approved.
 - [ ] Monitoring, alerts, and backups validated.
+
+## 14) Enhancement Cycle (Post-v1)
+Source: `ENHANCEMENT_PLANNING.md`
+
+### Enhancement Progress Snapshot (as of 2026-02-19)
+- Completed: `45`
+- Remaining: `0`
+
+## 14.1 Sprint 1 (Stability + Security)
+
+### Password reset flow
+- [x] `P0` Add reset password page at `frontend/src/app/reset-password/page.tsx`.
+- [x] `P0` Connect reset page to `POST /auth/password/reset`.
+- [x] `P0` Add localized reset-password strings (EN/AR/TR).
+- [x] `P1` Add frontend UX checklist for reset flow (valid/invalid/expired token).
+- [x] `P1` Add automated tests for reset flow.
+
+### Visibility scope enforcement
+- [x] `P0` Enforce `scope: "dashboard"` checks for comments on dashboard content.
+- [x] `P0` Enforce `scope: "dashboard"` checks for reactions on dashboard content.
+- [x] `P0` Add integration tests for scope mismatch denial.
+
+### Admin hard-delete completeness
+- [x] `P0` Expand admin deletion cascade to remove all related user data.
+- [x] `P0` Prevent orphaned records after admin user deletion.
+- [x] `P1` Add regression test for cleanup behavior.
+
+## 14.2 Sprint 2 (Core Enhancement)
+
+### Family activity feed
+- [x] `P1` Add endpoint `GET /families/:id/feed`.
+- [x] `P1` Build feed aggregation for entries/challenges/reports/social events.
+- [x] `P1` Enforce family membership authorization for feed access.
+- [x] `P1` Enforce visibility approval filtering for restricted events.
+- [x] `P1` Add feed filters: `all`, `entries`, `challenges`, `reports`, `social`.
+- [x] `P1` Add pagination/cursor support.
+- [x] `P1` Add feed UI in `frontend/src/app/family/page.tsx`.
+- [x] `P1` Add feed integration tests (authorized, unauthorized, approval-gated).
+
+## 14.3 Sprint 3 (Quality Hardening)
+
+### Hijri challenge periods
+- [x] `P1` Replace Gregorian period index math with deterministic Hijri mapping.
+- [x] `P1` Persist Hijri period metadata for daily/weekly/monthly scopes.
+- [x] `P1` Add boundary tests for Hijri periods.
+
+### Dashboard filters
+- [x] `P1` Add `from`/`to` support to dashboard summary API.
+- [x] `P1` Add filtered aggregate logic in backend.
+- [x] `P1` Add frontend dashboard date filter controls.
+
+### CI + E2E foundation
+- [x] `P1` Add CI workflow for lint, tests, and build.
+- [x] `P1` Add first E2E smoke suite for core journeys.
+- [x] `P1` Make CI required for merges to `develop`.
+
+## 14.4 Sprint 4 (Admin Command Center)
+
+### Admin overview dashboard
+- [x] `P0` Add endpoint `GET /admin/overview` with `from`/`to` filters.
+- [x] `P0` Add KPI aggregation for users, families, entries, challenges, reports, moderation events.
+- [x] `P1` Add trend-series support (daily/weekly buckets + previous-period comparison).
+- [x] `P1` Add top-entities query (most active users/families, highest report activity).
+- [x] `P0` Build admin dashboard UI with filter bar, KPI cards, and trend charts.
+
+### User management (full controls)
+- [x] `P0` Extend `GET /admin/users` with filters (`role`, `language`, `reminderEnabled`, join date, last activity) and sorting.
+- [x] `P0` Add endpoint `GET /admin/users/:id` for user detail + linked aggregates.
+- [x] `P0` Add endpoint `PATCH /admin/users/:id` for admin-editable profile/settings fields.
+- [x] `P1` Add admin actions: revoke sessions and trigger controlled reset-password link.
+- [x] `P0` Build user detail panel/page with edit form and action controls.
+
+### Family, entries, and challenges management
+- [x] `P1` Add endpoint `GET /admin/families` with search/filter/pagination.
+- [x] `P1` Add endpoint `GET /admin/families/:id` with members/invites/approval summary.
+- [x] `P1` Add admin family actions (member removal, owner transfer, archive/delete).
+- [x] `P1` Add admin entries explorer endpoints (`GET /admin/entries`, `GET /admin/entries/:id`).
+- [x] `P1` Add admin challenges explorer endpoints (`GET /admin/challenges`, `GET /admin/challenges/:id`).
+- [x] `P1` Add challenge admin actions (archive/reactivate/delete) with audit trail.
+- [x] `P1` Add admin reports explorer endpoints (`GET /admin/reports`, `GET /admin/reports/:id`).
+- [x] `P1` Add report admin actions (revoke public link, access policy toggle, delete report) with audit trail.
+- [x] `P1` Build tabbed admin management UI for families, entries, challenges, and reports.
+
+### Hardening, tests, and release readiness
+- [x] `P0` Require action reason for mutating admin operations and store before/after audit metadata.
+- [x] `P1` Add rate limiting to admin mutating endpoints.
+- [x] `P0` Add integration tests for new admin endpoints + non-admin denial coverage.
+- [x] `P1` Add admin E2E smoke suite (overview filters, user edit, family action, challenge action).
+
+## 14.5 Enhancement Definition Of Done
+- [x] New/changed endpoints covered by integration tests.
+- [ ] No authorization regression in feed/social/sharing paths.
+- [ ] CI pipeline is green on pull requests.
+- [x] New UI text localized for English, Arabic, and Turkish.
+- [ ] Release notes and rollback notes updated.

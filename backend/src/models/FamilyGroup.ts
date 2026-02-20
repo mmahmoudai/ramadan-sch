@@ -10,6 +10,7 @@ export interface IFamilyMember {
 export interface IFamilyGroup extends Document {
   ownerUserId: mongoose.Types.ObjectId;
   name: string;
+  archivedAt: Date | null;
   members: IFamilyMember[];
   createdAt: Date;
   updatedAt: Date;
@@ -29,6 +30,7 @@ const familyGroupSchema = new Schema<IFamilyGroup>(
   {
     ownerUserId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     name: { type: String, required: true },
+    archivedAt: { type: Date, default: null },
     members: [familyMemberSchema],
   },
   { timestamps: true }

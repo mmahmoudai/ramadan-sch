@@ -20,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html>
+    <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen bg-bg text-ink">
         <LanguageProvider>
           <ClientLayout>

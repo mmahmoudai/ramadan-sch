@@ -39,6 +39,35 @@ const SUNNAH_FIELDS = [
   { key: "sunnah_qabliyah_isha", labelKey: "tracker.sunnah_qabliyah_isha" },
 ];
 
+const SAWM_FIELDS = [
+  { key: "sawm_fasted", labelKey: "tracker.sawm_fasted" },
+  { key: "sawm_niyyah", labelKey: "tracker.sawm_niyyah" },
+  { key: "sawm_suhoor", labelKey: "tracker.sawm_suhoor" },
+  { key: "sawm_iftar_ontime", labelKey: "tracker.sawm_iftar_ontime" },
+];
+
+const DUA_FIELDS = [
+  { key: "dua_iftar", labelKey: "tracker.dua_iftar" },
+  { key: "dua_lastthird", labelKey: "tracker.dua_lastthird" },
+  { key: "dua_aftersalah", labelKey: "tracker.dua_aftersalah" },
+  { key: "dua_salawat", labelKey: "tracker.dua_salawat" },
+];
+
+const AKHLAQ_FIELDS = [
+  { key: "akhlaq_no_gossip", labelKey: "tracker.akhlaq_no_gossip" },
+  { key: "akhlaq_anger", labelKey: "tracker.akhlaq_anger" },
+  { key: "akhlaq_patience", labelKey: "tracker.akhlaq_patience" },
+  { key: "akhlaq_kindness", labelKey: "tracker.akhlaq_kindness" },
+  { key: "akhlaq_forgave", labelKey: "tracker.akhlaq_forgave" },
+];
+
+const SADAQAH_FIELDS = [
+  { key: "sadaqah_gave", labelKey: "tracker.sadaqah_gave" },
+  { key: "sadaqah_helped", labelKey: "tracker.sadaqah_helped" },
+  { key: "sadaqah_fed", labelKey: "tracker.sadaqah_fed" },
+  { key: "sadaqah_dua", labelKey: "tracker.sadaqah_dua" },
+];
+
 const MOODS = [
   { value: "happy", emoji: "😊" },
   { value: "okay", emoji: "🙂" },
@@ -49,7 +78,10 @@ const MOODS = [
 export default function TrackerPage() {
   const router = useRouter();
   const { locale, t } = useLanguage();
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [date, setDate] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  });
   const [fields, setFields] = useState<Record<string, any>>({});
   const [locked, setLocked] = useState(false);
   const [hijriInfo, setHijriInfo] = useState("");
@@ -157,6 +189,19 @@ export default function TrackerPage() {
         {saving && <div className="mt-2 text-xs text-gray-500">{t("tracker.saving")}</div>}
       </div>
 
+      {/* Sawm (Fasting) - Most important, first position */}
+      <div className="border-2 border-line rounded-xl bg-card p-4 pt-2">
+        <h2 className="bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-full px-4 py-1 text-center font-bold text-lg -mt-6 mx-auto w-fit">🌙 {t("tracker.sawm")}</h2>
+        <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-3">
+          {SAWM_FIELDS.map((f) => (
+            <label key={f.key} className={`flex items-center gap-2 cursor-pointer text-sm border-2 rounded-xl p-3 transition ${fields[f.key] ? "border-amber-400 bg-amber-50" : "border-gray-200 bg-white"}`}>
+              <input type="checkbox" checked={!!fields[f.key]} onChange={() => toggleField(f.key)} disabled={locked} className="w-4 h-4 accent-amber-600" />
+              {t(f.labelKey)}
+            </label>
+          ))}
+        </div>
+      </div>
+
       {/* Top Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Ibadah */}
@@ -235,6 +280,52 @@ export default function TrackerPage() {
               </label>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* Dua & Akhlaq Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Dua & Dhikr */}
+        <div className="border-2 border-line rounded-xl bg-card p-4 pt-2">
+          <h2 className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-full px-4 py-1 text-center font-bold text-lg -mt-6 mx-auto w-fit">🤲 {t("tracker.dua")}</h2>
+          <ul className="mt-3 space-y-1.5">
+            {DUA_FIELDS.map((f) => (
+              <li key={f.key}>
+                <label className="flex items-center gap-2 cursor-pointer text-base">
+                  <input type="checkbox" checked={!!fields[f.key]} onChange={() => toggleField(f.key)} disabled={locked} className="w-4 h-4 accent-teal-600" />
+                  {t(f.labelKey)}
+                </label>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Akhlaq */}
+        <div className="border-2 border-line rounded-xl bg-card p-4 pt-2">
+          <h2 className="bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-full px-4 py-1 text-center font-bold text-lg -mt-6 mx-auto w-fit">💜 {t("tracker.akhlaq")}</h2>
+          <ul className="mt-3 space-y-1.5">
+            {AKHLAQ_FIELDS.map((f) => (
+              <li key={f.key}>
+                <label className="flex items-center gap-2 cursor-pointer text-base">
+                  <input type="checkbox" checked={!!fields[f.key]} onChange={() => toggleField(f.key)} disabled={locked} className="w-4 h-4 accent-violet-600" />
+                  {t(f.labelKey)}
+                </label>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      {/* Sadaqah */}
+      <div className="border-2 border-line rounded-xl bg-card p-4 pt-2">
+        <h2 className="bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-full px-4 py-1 text-center font-bold text-lg -mt-6 mx-auto w-fit">🤝 {t("tracker.sadaqah")}</h2>
+        <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-3">
+          {SADAQAH_FIELDS.map((f) => (
+            <label key={f.key} className={`flex items-center gap-2 cursor-pointer text-sm border-2 rounded-xl p-3 transition ${fields[f.key] ? "border-green-400 bg-green-50" : "border-gray-200 bg-white"}`}>
+              <input type="checkbox" checked={!!fields[f.key]} onChange={() => toggleField(f.key)} disabled={locked} className="w-4 h-4 accent-green-600" />
+              {t(f.labelKey)}
+            </label>
+          ))}
         </div>
       </div>
 
