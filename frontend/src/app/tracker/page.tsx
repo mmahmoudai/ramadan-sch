@@ -243,18 +243,46 @@ export default function TrackerPage() {
 
       {/* Salah */}
       <div className="border-2 border-line rounded-xl bg-card p-4 pt-2">
-        <h2 className="bg-ink text-white rounded-full px-4 py-1 text-center font-bold text-lg -mt-6 mx-auto w-fit">{t("tracker.salah")}</h2>
-        <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+        <div className="flex items-center justify-center gap-2 -mt-6 mb-3">
+          <h2 className="bg-ink text-white rounded-full px-4 py-1 text-center font-bold text-lg w-fit">{t("tracker.salah")}</h2>
+          <div className="group relative z-[100]">
+            <button className="w-6 h-6 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 text-xs font-bold transition flex items-center justify-center" type="button">
+              ?
+            </button>
+            <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-64 sm:w-72 bg-white border-2 border-gray-300 text-gray-800 text-xs rounded-lg p-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 shadow-xl max-w-[90vw]" style={{ zIndex: 99999 }}>
+              <div className="font-bold mb-2 text-center">{locale === "ar" ? "معنى النقاط الثلاث:" : "The 3 dots mean:"}</div>
+              <div className="space-y-1.5">
+                <div className="flex items-start gap-2">
+                  <span className="w-3 h-3 rounded-full bg-accent shrink-0 mt-0.5"></span>
+                  <span className="flex-1 leading-tight">{locale === "ar" ? "النقطة الأولى: صليت الصلاة في وقتها" : "1st dot: Prayed on time"}</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="w-3 h-3 rounded-full bg-accent shrink-0 mt-0.5"></span>
+                  <span className="flex-1 leading-tight">{locale === "ar" ? "النقطة الثانية: صليت في المسجد/جماعة" : "2nd dot: Prayed in mosque/congregation"}</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="w-3 h-3 rounded-full bg-accent shrink-0 mt-0.5"></span>
+                  <span className="flex-1 leading-tight">{locale === "ar" ? "النقطة الثالثة: صليت بخشوع وتركيز" : "3rd dot: Prayed with focus/khushu"}</span>
+                </div>
+              </div>
+              <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-r-2 border-b-2 border-gray-300 rotate-45"></div>
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
           {SALAH_NAMES.map((s) => (
             <div key={s} className="border border-gray-300 rounded-xl p-3 text-center bg-white">
-              <h3 className="font-bold text-lg">{t(`tracker.salah.${s}`)}</h3>
-              <div className="flex justify-center gap-2 mt-2">
+              <h3 className="font-bold text-lg mb-2">{t(`tracker.salah.${s}`)}</h3>
+              <div className="flex justify-center gap-2">
                 {[1, 2, 3].map((n) => {
                   const key = `${s}_${n}`;
                   return (
-                    <label key={key} className="relative w-5 h-5 cursor-pointer">
+                    <label key={key} className="relative w-5 h-5 cursor-pointer group/dot">
                       <input type="checkbox" checked={!!fields[key]} onChange={() => toggleField(key)} disabled={locked} className="absolute inset-0 opacity-0 cursor-pointer" />
                       <span className={`absolute inset-0 rounded-full border-2 border-ink transition ${fields[key] ? "bg-accent scale-90" : "bg-white"}`} />
+                      <span className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 bg-white border border-gray-300 text-gray-800 text-[10px] px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover/dot:opacity-100 transition pointer-events-none shadow-lg max-w-[90vw]" style={{ zIndex: 99999 }}>
+                        {n === 1 ? (locale === "ar" ? "في الوقت" : "On time") : n === 2 ? (locale === "ar" ? "جماعة" : "Congregation") : (locale === "ar" ? "خشوع" : "Khushu")}
+                      </span>
                     </label>
                   );
                 })}
