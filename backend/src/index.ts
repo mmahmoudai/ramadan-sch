@@ -36,7 +36,7 @@ const PORT = process.env.PORT || 4000;
 
 const FRONTEND_ORIGIN = process.env.FRONTEND_URL || "http://localhost:3000";
 
-app.set("trust proxy", 1);
+app.set("trust proxy", 2); // Cloudflare → Nginx → Express
 
 app.use(helmet({
   contentSecurityPolicy: {
