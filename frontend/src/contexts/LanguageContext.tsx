@@ -29,9 +29,23 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
+function getInitialLocale(): Locale {
+  if (typeof window === "undefined") return "en";
+  try {
+    const saved = localStorage.getItem("language") as Locale | null;
+    if (saved && ALL_LOCALES.includes(saved)) return saved;
+  } catch {}
+  return "en";
+}
+
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>("en");
+  const [locale, setLocaleState] = useState<Locale>(getInitialLocale);
   const [enabledLanguages, setEnabledLanguages] = useState<Locale[]>(ALL_LOCALES);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const reloadEnabledLanguages = useCallback(async () => {
     try {
@@ -51,24 +65,16 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // On mount: load enabled languages, then apply saved locale if still enabled
+  // On mount: load enabled languages (locale already set from localStorage above)
   useEffect(() => {
-    reloadEnabledLanguages().then(() => {
-      const saved = localStorage.getItem("language") as Locale | null;
-      if (saved && ALL_LOCALES.includes(saved)) {
-        setLocaleState((prev) => {
-          // Will be corrected by reloadEnabledLanguages if disabled
-          return saved;
-        });
-      }
-    });
+    reloadEnabledLanguages();
   }, [reloadEnabledLanguages]);
 
   // Update HTML lang and dir attributes when locale changes
   useEffect(() => {
     document.documentElement.lang = locale;
     document.documentElement.dir = getDirection(locale);
-    localStorage.setItem("language", locale);
+    try { localStorage.setItem("language", locale); } catch {}
   }, [locale]);
 
   const setLocale = useCallback((newLocale: Locale) => {
