@@ -355,6 +355,11 @@ const translations: Record<Locale, Record<string, string>> = {
     "tracker.salah.asr": "Asr",
     "tracker.salah.maghrib": "Maghrib",
     "tracker.salah.isha": "Isha",
+    // Salah tooltip
+    "tracker.salahTooltipTitle": "The 3 dots mean:",
+    "tracker.salahDot1": "1st dot: Prayed on time",
+    "tracker.salahDot2": "2nd dot: Prayed in mosque/congregation",
+    "tracker.salahDot3": "3rd dot: Prayed with focus/khushu",
     // Sunnah fields
     "tracker.sunnah_morning_dhikr": "Morning dhikr",
     "tracker.sunnah_evening_dhikr": "Evening dhikr",
@@ -763,6 +768,11 @@ const translations: Record<Locale, Record<string, string>> = {
     "tracker.salah.asr": "العصر",
     "tracker.salah.maghrib": "المغرب",
     "tracker.salah.isha": "العشاء",
+    // Salah tooltip
+    "tracker.salahTooltipTitle": "معنى النقاط الثلاث:",
+    "tracker.salahDot1": "النقطة الأولى: صليت في وقتها",
+    "tracker.salahDot2": "النقطة الثانية: صليت في المسجد/جماعة",
+    "tracker.salahDot3": "النقطة الثالثة: صليت بخشوع",
     // Sunnah fields
     "tracker.sunnah_morning_dhikr": "أذكار الصباح",
     "tracker.sunnah_evening_dhikr": "أذكار المساء",
@@ -1171,6 +1181,11 @@ const translations: Record<Locale, Record<string, string>> = {
     "tracker.salah.asr": "İkindi",
     "tracker.salah.maghrib": "Akşam",
     "tracker.salah.isha": "Yatsı",
+    // Salah tooltip
+    "tracker.salahTooltipTitle": "3 noktanın anlamı:",
+    "tracker.salahDot1": "1. nokta: Vaktinde kılındı",
+    "tracker.salahDot2": "2. nokta: Camide/cemaatle kılındı",
+    "tracker.salahDot3": "3. nokta: Huşu ile kılındı",
     // Sunnah fields
     "tracker.sunnah_morning_dhikr": "Sabah zikri",
     "tracker.sunnah_evening_dhikr": "Akşam zikri",
