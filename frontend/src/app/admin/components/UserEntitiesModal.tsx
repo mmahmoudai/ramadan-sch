@@ -419,16 +419,14 @@ export function UserEntitiesModal({
                           <td className="px-3 py-2">{r.accessCount}</td>
                           <td className="px-3 py-2">
                             <div className="flex flex-wrap gap-1">
-                              {r.visibility === "public" && !r.revokedAt && (
-                                <a
-                                  href={`/reports/public/${r.id}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 px-2 py-1 border border-blue-300 text-blue-700 hover:bg-blue-50 rounded text-xs font-medium transition"
-                                >
-                                  View <ExternalLink className="w-3 h-3" />
-                                </a>
-                              )}
+                              <a
+                                href={`/reports/${r.id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 px-2 py-1 border border-blue-300 text-blue-700 hover:bg-blue-50 rounded text-xs font-medium transition"
+                              >
+                                View <ExternalLink className="w-3 h-3" />
+                              </a>
                               <Btn variant="warn" disabled={actionLoading !== null} onClick={() => onReportRevokePublic(r.id)}>Revoke</Btn>
                               <Btn variant="success" disabled={actionLoading !== null}
                                 onClick={() => onReportToggleVisibility(r.id, r.visibility === "public" ? "private" : "public")}>
