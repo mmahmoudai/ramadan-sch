@@ -2,6 +2,7 @@ import { Router, Response, NextFunction } from "express";
 import multer from "multer";
 import path from "path";
 import { z } from "zod";
+import { sanitizeStr } from "../utils/sanitize";
 import { User } from "../models/User";
 import { requireAuth, AuthRequest } from "../middleware/auth";
 import { AppError } from "../middleware/errorHandler";
@@ -23,17 +24,16 @@ const upload = multer({
 });
 
 const profileUpdateSchema = z.object({
-  displayName: z.string().min(1).max(100).optional(),
-  bio: z.string().max(500).optional(),
-  personalInfo: z.record(z.unknown()).optional(),
+  displayName: z.string().min(1).max(60).transform(sanitizeStr).optional(),
+  bio: z.string().max(300).transform(sanitizeStr).optional(),
 });
 
 const settingsUpdateSchema = z.object({
   language: z.enum(["ar", "en", "tr"]).optional(),
-  timezoneIana: z.string().optional(),
+  timezoneIana: z.string().min(1).max(100).transform(sanitizeStr).optional(),
   timezoneSource: z.enum(["auto", "manual"]).optional(),
   reminderEnabled: z.boolean().optional(),
-  reminderTimeLocal: z.string().optional(),
+  reminderTimeLocal: z.string().regex(/^\d{2}:\d{2}$/, "Must be HH:MM").optional(),
 });
 
 profileRouter.get("/", requireAuth, async (req: AuthRequest, res: Response, next: NextFunction) => {

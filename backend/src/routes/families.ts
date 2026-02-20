@@ -1,6 +1,7 @@
 import { Router, Response, NextFunction } from "express";
 import mongoose from "mongoose";
 import { z } from "zod";
+import { sanitizeStr } from "../utils/sanitize";
 import { FamilyGroup } from "../models/FamilyGroup";
 import { User } from "../models/User";
 import { AuditLog } from "../models/AuditLog";
@@ -18,7 +19,7 @@ import { sendFamilyInviteEmail, sendFamilyInviteConfirmation } from "../utils/ma
 
 export const familiesRouter = Router();
 
-const createSchema = z.object({ name: z.string().min(1).max(100) });
+const createSchema = z.object({ name: z.string().min(1).max(100).transform(sanitizeStr) });
 const feedFilterSchema = z.enum(["all", "entries", "challenges", "reports", "social"]);
 type FeedFilter = z.infer<typeof feedFilterSchema>;
 
@@ -321,13 +322,15 @@ familiesRouter.get("/:id/feed", requireAuth, async (req: AuthRequest, res: Respo
 
 familiesRouter.post("/:id/invite", requireAuth, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const { email } = req.body;
-    if (!email) throw new AppError(400, "Email required");
+    const rawEmail = req.body?.email;
+    if (typeof rawEmail !== "string" || !rawEmail.trim()) throw new AppError(400, "Email required");
+    const email = rawEmail.toLowerCase().trim().slice(0, 254);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new AppError(400, "Invalid email address");
 
     const group = await FamilyGroup.findOne({ _id: req.params.id, ownerUserId: req.user!.userId, archivedAt: null });
     if (!group) throw new AppError(404, "Family group not found or not owner");
 
-    const invitee = await User.findOne({ email });
+    const invitee = await User.findOne({ email: { $eq: email } });
     if (!invitee) throw new AppError(404, "User not found with that email");
 
     const already = group.members.find((m) => m.userId.toString() === invitee._id.toString());
@@ -386,11 +389,11 @@ familiesRouter.post("/:id/leave", requireAuth, async (req: AuthRequest, res: Res
 });
 
 const giftSchema = z.object({
-  toUserId: z.string().min(1),
+  toUserId: z.string().min(1).max(100),
   type: z.enum(["gift", "badge", "certificate"]),
-  icon: z.string().min(1),
-  title: z.string().min(1).max(100),
-  message: z.string().max(500).optional().default(""),
+  icon: z.string().min(1).max(10).transform(sanitizeStr),
+  title: z.string().min(1).max(100).transform(sanitizeStr),
+  message: z.string().max(500).optional().default("").transform(sanitizeStr),
 });
 
 familiesRouter.get("/:id/stats", requireAuth, async (req: AuthRequest, res: Response, next: NextFunction) => {

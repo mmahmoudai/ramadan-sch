@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { z } from "zod";
+import { sanitizeStr } from "../utils/sanitize";
 import { Report } from "../models/Report";
 import { DailyEntry } from "../models/DailyEntry";
 import { User } from "../models/User";
@@ -11,12 +12,12 @@ import { AppError } from "../middleware/errorHandler";
 export const reportsRouter = Router();
 
 const createSchema = z.object({
-  periodScope: z.string(),
-  periodStart: z.string(),
-  periodEnd: z.string(),
+  periodScope: z.enum(["day", "week", "month", "custom"]),
+  periodStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "periodStart must be YYYY-MM-DD"),
+  periodEnd: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "periodEnd must be YYYY-MM-DD"),
   visibility: z.enum(["public", "private"]),
   includeProfileInfo: z.boolean().optional().default(false),
-});
+}).refine((d) => d.periodStart <= d.periodEnd, { message: "periodStart must be before or equal to periodEnd" });
 
 reportsRouter.get("/public/:token", async (req: Request, res: Response, next: NextFunction) => {
   try {
