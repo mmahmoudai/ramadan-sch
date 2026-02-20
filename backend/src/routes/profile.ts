@@ -1,11 +1,34 @@
 import { Router, Response, NextFunction } from "express";
 import multer from "multer";
 import path from "path";
+import fs from "fs";
 import { z } from "zod";
 import { sanitizeStr } from "../utils/sanitize";
 import { User } from "../models/User";
 import { requireAuth, AuthRequest } from "../middleware/auth";
 import { AppError } from "../middleware/errorHandler";
+
+// Magic bytes for allowed image types (prevents disguised file uploads)
+const IMAGE_MAGIC: Array<{ bytes: number[]; offset: number; mime: string }> = [
+  { bytes: [0xff, 0xd8, 0xff], offset: 0, mime: "image/jpeg" },
+  { bytes: [0x89, 0x50, 0x4e, 0x47], offset: 0, mime: "image/png" },
+  { bytes: [0x47, 0x49, 0x46], offset: 0, mime: "image/gif" },
+  { bytes: [0x52, 0x49, 0x46, 0x46], offset: 0, mime: "image/webp" },
+];
+
+function isAllowedImageMagic(filePath: string): boolean {
+  try {
+    const buf = Buffer.alloc(12);
+    const fd = fs.openSync(filePath, "r");
+    fs.readSync(fd, buf, 0, 12, 0);
+    fs.closeSync(fd);
+    return IMAGE_MAGIC.some(({ bytes, offset }) =>
+      bytes.every((b, i) => buf[offset + i] === b)
+    );
+  } catch {
+    return false;
+  }
+}
 
 export const profileRouter = Router();
 
@@ -60,6 +83,13 @@ profileRouter.patch("/profile", requireAuth, async (req: AuthRequest, res: Respo
 profileRouter.post("/avatar", requireAuth, upload.single("avatar"), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     if (!req.file) throw new AppError(400, "No file uploaded");
+
+    // Validate actual file content via magic bytes — reject disguised executables
+    if (!isAllowedImageMagic(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+      throw new AppError(400, "Invalid image file");
+    }
+
     const avatarUrl = `/uploads/${req.file.filename}`;
     const user = await User.findByIdAndUpdate(req.user!.userId, { avatarUrl }, { new: true }).select("-passwordHash -resetPasswordToken -resetPasswordExpires");
     if (!user) throw new AppError(404, "User not found");
