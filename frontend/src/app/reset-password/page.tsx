@@ -25,25 +25,25 @@ function ResetPasswordContent() {
     setMessage("");
 
     if (!token) {
-      setError(t("auth.invalidResetLink"));
+      setError(t("auth.validation.invalidResetLink"));
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError(t("auth.passwordsDoNotMatch"));
+      setError(t("auth.validation.passwordsDoNotMatch"));
       return;
     }
 
     if (newPassword.length < 8) {
-      setError("Password must be at least 8 characters");
+      setError(t("auth.validation.passwordMin"));
       return;
     }
     if (!/[A-Z]/.test(newPassword)) {
-      setError("Password must contain at least one uppercase letter");
+      setError(t("auth.validation.passwordUppercase"));
       return;
     }
     if (!/[0-9]/.test(newPassword)) {
-      setError("Password must contain at least one number");
+      setError(t("auth.validation.passwordNumber"));
       return;
     }
 
@@ -83,7 +83,7 @@ function ResetPasswordContent() {
               required
               className="w-full border-2 border-line rounded-lg px-3 py-2 focus:outline-none focus:border-accent"
             />
-            <p className="text-xs text-gray-400 mt-1">Min 8 characters, one uppercase letter, one number</p>
+            <p className="text-xs text-gray-400 mt-1">{t("auth.validation.passwordHint")}</p>
           </div>
 
           <div>

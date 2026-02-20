@@ -19,9 +19,9 @@ export default function SignupPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (password.length < 8) { setError("Password must be at least 8 characters"); return; }
-    if (!/[A-Z]/.test(password)) { setError("Password must contain at least one uppercase letter"); return; }
-    if (!/[0-9]/.test(password)) { setError("Password must contain at least one number"); return; }
+    if (password.length < 8) { setError(t("auth.validation.passwordMin")); return; }
+    if (!/[A-Z]/.test(password)) { setError(t("auth.validation.passwordUppercase")); return; }
+    if (!/[0-9]/.test(password)) { setError(t("auth.validation.passwordNumber")); return; }
     setLoading(true);
     try {
       const data: any = await apiFetch("/auth/signup", {
@@ -56,7 +56,7 @@ export default function SignupPage() {
           <div>
             <label className="block text-sm font-semibold mb-1">{t("auth.password")}</label>
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} className="w-full border-2 border-line rounded-lg px-3 py-2 focus:outline-none focus:border-accent" />
-            <p className="text-xs text-gray-400 mt-1">Min 8 characters, one uppercase letter, one number</p>
+            <p className="text-xs text-gray-400 mt-1">{t("auth.validation.passwordHint")}</p>
           </div>
           <button type="submit" disabled={loading} className="w-full bg-ink text-white py-2.5 rounded-lg font-bold hover:opacity-90 transition disabled:opacity-50">
             {loading ? t("auth.creating") : t("nav.signup")}
