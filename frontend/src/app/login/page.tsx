@@ -6,10 +6,12 @@ import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api";
 import { setAuth } from "@/lib/auth";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useRedirectIfAuthed } from "@/hooks/useRedirectIfAuthed";
 
 export default function LoginPage() {
   const router = useRouter();
   const { t } = useLanguage();
+  useRedirectIfAuthed();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [keepSignedIn, setKeepSignedIn] = useState(false);
