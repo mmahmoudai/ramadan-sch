@@ -13,6 +13,7 @@ import { EntityTable } from "./components/EntityTable";
 import { EntityDetail } from "./components/EntityDetail";
 import { UserDetailPanel } from "./components/UserDetailPanel";
 import { UserEntitiesModal } from "./components/UserEntitiesModal";
+import { GlobalSettingsPanel } from "./components/GlobalSettingsPanel";
 import {
   RoleFilter, LanguageFilter, ReminderFilter, AdminEntityTab,
   OverviewFilters, UserListFilters,
@@ -450,6 +451,9 @@ export default function AdminPage() {
       )}
 
       <h1 className="text-3xl font-extrabold">{t("admin.title")}</h1>
+
+      {/* ── Global Settings ───────────────────────────────────────────────── */}
+      <GlobalSettingsPanel onToast={showToast} />
 
       {/* ── Overview ─────────────────────────────────────────────────────── */}
       <section className="border-2 border-line rounded-xl p-4 space-y-4">
