@@ -21,6 +21,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var l=localStorage.getItem('language');if(l==='ar'){document.documentElement.lang='ar';document.documentElement.dir='rtl';}else if(l==='tr'){document.documentElement.lang='tr';document.documentElement.dir='ltr';}}catch(e){}document.documentElement.style.visibility='hidden';})();`,
+          }}
+        />
+      </head>
       <body className="min-h-screen bg-bg text-ink">
         <LanguageProvider>
           <ClientLayout>

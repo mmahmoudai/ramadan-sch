@@ -62,6 +62,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     } catch {}
     reloadEnabledLanguages();
     setMounted(true);
+    // Remove the visibility:hidden set by the inline script in layout.tsx
+    document.documentElement.style.visibility = "";
   }, [reloadEnabledLanguages]);
 
   // Update HTML lang and dir attributes when locale changes (client only)
