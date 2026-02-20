@@ -12,6 +12,7 @@ import { OverviewSection } from "./components/OverviewSection";
 import { EntityTable } from "./components/EntityTable";
 import { EntityDetail } from "./components/EntityDetail";
 import { UserDetailPanel } from "./components/UserDetailPanel";
+import { UserEntitiesModal } from "./components/UserEntitiesModal";
 import {
   RoleFilter, LanguageFilter, ReminderFilter, AdminEntityTab,
   OverviewFilters, UserListFilters,
@@ -75,6 +76,12 @@ export default function AdminPage() {
   const [familyTransferUserId, setFamilyTransferUserId] = useState("");
   const [familyRemoveUserId, setFamilyRemoveUserId] = useState("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  const [userEntitiesModal, setUserEntitiesModal] = useState<{
+    user: AdminUserRow;
+    detail: AdminUserDetailResponse;
+    initialTab: AdminEntityTab;
+  } | null>(null);
 
   const isAuthorized = isLoggedIn() && isAdmin();
 
@@ -189,13 +196,12 @@ export default function AdminPage() {
   const onSelectUser = async (userId: string) => { setSelectedUserId(userId); await loadUserDetail(userId); };
   const onCloseUserPanel = () => { setSelectedUserId(null); setSelectedUserDetail(null); setEditForm(emptyEditForm); };
 
-  const onJumpToUserEntities = (userEmail: string, tab: AdminEntityTab) => {
-    setActiveTab(tab);
-    setManagementSearch(userEmail);
-    setAppliedManagementSearch(userEmail);
-    setManagementPage(1);
-    setManagementDetail(null);
-    setTimeout(() => entitySectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+  const onOpenUserEntities = async (user: AdminUserRow, tab: AdminEntityTab) => {
+    try {
+      const token = getToken()!;
+      const data = await apiFetch<AdminUserDetailResponse>(`/admin/users/${user.id}`, { token });
+      setUserEntitiesModal({ user, detail: data, initialTab: tab });
+    } catch (err: any) { showToast("error", err.message || "Failed to load user data"); }
   };
 
   const onSaveUser = () => {
@@ -400,6 +406,22 @@ export default function AdminPage() {
       <ConfirmModal state={confirmModal} onClose={closeConfirm} />
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
 
+      {userEntitiesModal && (
+        <UserEntitiesModal
+          user={userEntitiesModal.user}
+          detail={userEntitiesModal.detail}
+          initialTab={userEntitiesModal.initialTab}
+          onClose={() => setUserEntitiesModal(null)}
+          onFamilyArchive={(id) => { onFamilyArchive(id); setUserEntitiesModal(null); }}
+          onFamilyDelete={(id) => { onFamilyDelete(id); setUserEntitiesModal(null); }}
+          onChallengeAction={(id, action) => { onChallengeAction(id, action); setUserEntitiesModal(null); }}
+          onReportRevokePublic={(id) => { onReportRevokePublic(id); setUserEntitiesModal(null); }}
+          onReportToggleVisibility={(id, next) => { onReportToggleVisibility(id, next); setUserEntitiesModal(null); }}
+          onReportDelete={(id) => { onReportDelete(id); setUserEntitiesModal(null); }}
+          actionLoading={actionLoading}
+        />
+      )}
+
       {selectedUserId && selectedUserDetail && !detailLoading && (
         <UserDetailPanel
           detail={selectedUserDetail}
@@ -519,11 +541,11 @@ export default function AdminPage() {
                       {(["families", "entries", "challenges", "reports"] as AdminEntityTab[]).map((tab) => (
                         <button
                           key={tab}
-                          onClick={() => onJumpToUserEntities(user.email, tab)}
+                          onClick={() => onOpenUserEntities(user, tab)}
                           title={`View ${user.displayName}'s ${tab}`}
-                          className="text-xs px-2 py-0.5 rounded border border-blue-200 text-blue-700 hover:bg-blue-50 font-medium capitalize"
+                          className="text-xs px-2 py-0.5 rounded border border-blue-200 text-blue-700 hover:bg-blue-50 font-medium"
                         >
-                          {tab[0].toUpperCase() + tab.slice(1, 3)}
+                          {tab === "families" ? "Fam" : tab === "entries" ? "Ent" : tab === "challenges" ? "Chl" : "Rep"}
                         </button>
                       ))}
                     </div>
