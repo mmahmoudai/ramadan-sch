@@ -414,6 +414,18 @@ export default function AdminPage() {
           onClose={() => setUserEntitiesModal(null)}
           onFamilyArchive={(id) => { onFamilyArchive(id); setUserEntitiesModal(null); }}
           onFamilyDelete={(id) => { onFamilyDelete(id); setUserEntitiesModal(null); }}
+          onFamilyTransferOwnership={async (familyId, newOwnerUserId, reason) => {
+            const token = getToken()!;
+            await apiFetch(`/admin/families/${familyId}/transfer-ownership`, { token, method: "POST", body: JSON.stringify({ newOwnerUserId, reason }) });
+            showToast("success", "Ownership transferred");
+            await loadManagementTab();
+          }}
+          onFamilyRemoveMember={async (familyId, memberUserId, reason) => {
+            const token = getToken()!;
+            await apiFetch(`/admin/families/${familyId}/remove-member`, { token, method: "POST", body: JSON.stringify({ memberUserId, reason }) });
+            showToast("success", "Member removed");
+            await loadManagementTab();
+          }}
           onChallengeAction={(id, action) => { onChallengeAction(id, action); setUserEntitiesModal(null); }}
           onReportRevokePublic={(id) => { onReportRevokePublic(id); setUserEntitiesModal(null); }}
           onReportToggleVisibility={(id, next) => { onReportToggleVisibility(id, next); setUserEntitiesModal(null); }}
