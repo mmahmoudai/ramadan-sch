@@ -3,8 +3,14 @@ import { User } from "../models/User";
 import { DailyEntry } from "../models/DailyEntry";
 import { EmailReminder } from "../models/EmailReminder";
 import { sendDailyReminderEmail } from "../utils/mailer";
+import { getConfig } from "../models/AppConfig";
 
 async function processReminders() {
+  const globalEnabled = await getConfig("emailRemindersEnabled", true);
+  if (!globalEnabled) {
+    console.log("[CRON] Email reminders globally disabled — skipping.");
+    return;
+  }
   console.log("[CRON] Processing reminders...");
   const now = new Date();
   const today = now.toISOString().split("T")[0];

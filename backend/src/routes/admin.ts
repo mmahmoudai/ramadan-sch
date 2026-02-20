@@ -15,6 +15,7 @@ import { VisibilityApproval } from "../models/VisibilityApproval";
 import { Comment } from "../models/Comment";
 import { Reaction } from "../models/Reaction";
 import { AppError } from "../middleware/errorHandler";
+import { getConfig, setConfig } from "../models/AppConfig";
 import { formatGregorianDate, parseGregorianDateStrict } from "../utils/hijri";
 import { sendPasswordResetEmail } from "../utils/mailer";
 import { adminMutationLimiter } from "../middleware/rateLimiter";
@@ -2129,6 +2130,49 @@ adminRouter.get("/audit", async (req: AuthRequest, res: Response, next: NextFunc
       .lean();
 
     res.json({ logs });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /admin/config — get global app configuration
+adminRouter.get("/config", async (_req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const emailRemindersEnabled = await getConfig("emailRemindersEnabled", true);
+    res.json({ config: { emailRemindersEnabled } });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PATCH /admin/config — update global app configuration
+adminRouter.patch("/config", adminMutationLimiter, async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const payload = (req.body || {}) as Record<string, unknown>;
+    const updated: Record<string, unknown> = {};
+
+    if (Object.prototype.hasOwnProperty.call(payload, "emailRemindersEnabled")) {
+      if (typeof payload.emailRemindersEnabled !== "boolean") {
+        throw new AppError(400, "emailRemindersEnabled must be a boolean");
+      }
+      await setConfig("emailRemindersEnabled", payload.emailRemindersEnabled);
+      updated.emailRemindersEnabled = payload.emailRemindersEnabled;
+    }
+
+    if (Object.keys(updated).length === 0) {
+      throw new AppError(400, "No valid config keys provided");
+    }
+
+    await AuditLog.create({
+      actorUserId: req.user!.userId,
+      action: "admin_config_update",
+      targetType: "config",
+      targetId: "global",
+      metadata: { updated },
+    });
+
+    const emailRemindersEnabled = await getConfig("emailRemindersEnabled", true);
+    res.json({ config: { emailRemindersEnabled } });
   } catch (err) {
     next(err);
   }
