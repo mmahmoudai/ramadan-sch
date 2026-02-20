@@ -19,6 +19,7 @@ import { adminRouter } from "./routes/admin";
 import { errorHandler } from "./middleware/errorHandler";
 import { authLimiter, generalLimiter } from "./middleware/rateLimiter";
 import { startReminderCron } from "./jobs/reminderCron";
+import { getConfig } from "./models/AppConfig";
 
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
@@ -81,6 +82,16 @@ app.use("/uploads", express.static("uploads"));
 
 app.get("/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
+// Public: returns which languages are enabled — used by frontend before auth
+app.get("/config/languages", async (_req, res, next) => {
+  try {
+    const enabledLanguages = await getConfig("enabledLanguages", ["en", "ar", "tr"]);
+    res.json({ enabledLanguages });
+  } catch (err) {
+    next(err);
+  }
 });
 
 app.use("/auth", authLimiter, authRouter);
