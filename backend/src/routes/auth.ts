@@ -8,25 +8,60 @@ import { generateAccessToken, generateRefreshToken, getRefreshTokenExpiry } from
 import { AppError } from "../middleware/errorHandler";
 import { sendWelcomeEmail, sendPasswordResetEmail } from "../utils/mailer";
 import { detectTimezoneFromIp, getClientIp } from "../utils/timezoneDetector";
+import { loginLimiter, signupLimiter, forgotPasswordLimiter } from "../middleware/rateLimiter";
 
 export const authRouter = Router();
 
+// Strip HTML/script tags from strings to prevent XSS stored in DB
+function stripTags(str: string): string {
+  return str.replace(/<[^>]*>/g, "").trim();
+}
+
+// Ensure a value is a plain string (not object — prevents NoSQL injection via $gt/$ne etc.)
+function assertString(val: unknown, field: string): string {
+  if (typeof val !== "string") throw new AppError(400, `Invalid value for ${field}`);
+  return val;
+}
+
 const signupSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
-  displayName: z.string().min(1).max(100),
+  email: z.string().email().max(254).transform((e) => e.toLowerCase().trim()),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .max(128, "Password too long")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number"),
+  displayName: z
+    .string()
+    .min(1, "Display name required")
+    .max(60, "Display name too long")
+    .transform(stripTags),
 });
 
 const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1),
+  email: z.string().email().max(254).transform((e) => e.toLowerCase().trim()),
+  password: z.string().min(1).max(128),
   keepSignedIn: z.boolean().optional().default(false),
 });
 
-authRouter.post("/signup", async (req: Request, res: Response, next: NextFunction) => {
+const forgotSchema = z.object({
+  email: z.string().email().max(254).transform((e) => e.toLowerCase().trim()),
+});
+
+const resetSchema = z.object({
+  token: z.string().min(1).max(200).regex(/^[a-f0-9]+$/, "Invalid token format"),
+  newPassword: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .max(128, "Password too long")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number"),
+});
+
+authRouter.post("/signup", signupLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const body = signupSchema.parse(req.body);
-    const existing = await User.findOne({ email: body.email });
+    const existing = await User.findOne({ email: { $eq: body.email } });
     if (existing) throw new AppError(409, "Email already registered");
 
     // Detect timezone from IP for new users
@@ -74,10 +109,10 @@ authRouter.post("/signup", async (req: Request, res: Response, next: NextFunctio
   }
 });
 
-authRouter.post("/login", async (req: Request, res: Response, next: NextFunction) => {
+authRouter.post("/login", loginLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const body = loginSchema.parse(req.body);
-    const user = await User.findOne({ email: body.email });
+    const user = await User.findOne({ email: { $eq: body.email } });
     if (!user) throw new AppError(401, "Invalid email or password");
 
     const valid = await user.comparePassword(body.password);
@@ -126,9 +161,9 @@ authRouter.post("/login", async (req: Request, res: Response, next: NextFunction
 
 authRouter.post("/logout", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { refreshToken } = req.body;
+    const refreshToken = typeof req.body?.refreshToken === "string" ? req.body.refreshToken : null;
     if (refreshToken) {
-      await RefreshToken.deleteOne({ token: refreshToken });
+      await RefreshToken.deleteOne({ token: { $eq: refreshToken } });
     }
     res.json({ message: "Logged out" });
   } catch (err) {
@@ -138,10 +173,10 @@ authRouter.post("/logout", async (req: Request, res: Response, next: NextFunctio
 
 authRouter.post("/refresh", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { refreshToken } = req.body;
+    const refreshToken = assertString(req.body?.refreshToken, "refreshToken");
     if (!refreshToken) throw new AppError(400, "Refresh token required");
 
-    const stored = await RefreshToken.findOne({ token: refreshToken });
+    const stored = await RefreshToken.findOne({ token: { $eq: refreshToken } });
     if (!stored || stored.expiresAt < new Date()) {
       if (stored) await stored.deleteOne();
       throw new AppError(401, "Invalid or expired refresh token");
@@ -162,12 +197,11 @@ authRouter.post("/refresh", async (req: Request, res: Response, next: NextFuncti
   }
 });
 
-authRouter.post("/password/forgot", async (req: Request, res: Response, next: NextFunction) => {
+authRouter.post("/password/forgot", forgotPasswordLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { email } = req.body;
-    if (!email) throw new AppError(400, "Email required");
+    const { email } = forgotSchema.parse(req.body);
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: { $eq: email } });
     if (!user) {
       return res.json({ message: "If an account exists, a reset link has been sent." });
     }
@@ -188,15 +222,13 @@ authRouter.post("/password/forgot", async (req: Request, res: Response, next: Ne
   }
 });
 
-authRouter.post("/password/reset", async (req: Request, res: Response, next: NextFunction) => {
+authRouter.post("/password/reset", forgotPasswordLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { token, newPassword } = req.body;
-    if (!token || !newPassword) throw new AppError(400, "Token and new password required");
-    if (newPassword.length < 8) throw new AppError(400, "Password must be at least 8 characters");
+    const { token, newPassword } = resetSchema.parse(req.body);
 
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
     const user = await User.findOne({
-      resetPasswordToken: hashedToken,
+      resetPasswordToken: { $eq: hashedToken },
       resetPasswordExpires: { $gt: new Date() },
     });
     if (!user) throw new AppError(400, "Invalid or expired reset token");
