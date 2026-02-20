@@ -312,7 +312,8 @@ export default function ChallengesPage() {
         {filteredChallenges.map((c) => {
           const completed = c.progress.filter((p) => p.completed).length;
           const total = c.progress.length;
-          const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+          const avgValue = total > 0 ? Math.round(c.progress.reduce((s, p) => s + p.progressValue, 0) / total) : 0;
+          const pct = avgValue;
           const cfg = SCOPE_CONFIG[c.scope];
           const isExpanded = expandedChallenge === c._id;
           const isEditing = editingChallenge === c._id;
