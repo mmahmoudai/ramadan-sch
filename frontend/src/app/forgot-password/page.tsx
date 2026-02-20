@@ -4,9 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useRedirectIfAuthed } from "@/hooks/useRedirectIfAuthed";
 
 export default function ForgotPasswordPage() {
   const { t } = useLanguage();
+  useRedirectIfAuthed();
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");

@@ -5,11 +5,13 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiFetch } from "@/lib/api";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useRedirectIfAuthed } from "@/hooks/useRedirectIfAuthed";
 
 function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useLanguage();
+  useRedirectIfAuthed();
 
   const token = (searchParams.get("token") || "").trim();
 
