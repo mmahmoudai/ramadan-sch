@@ -1,9 +1,22 @@
 import { Router, Response, NextFunction } from "express";
-import { DailyEntry } from "../models/DailyEntry";
+import { z } from "zod";
+import { DailyEntry, IDailyEntryField } from "../models/DailyEntry";
 import { User } from "../models/User";
 import { requireAuth, AuthRequest } from "../middleware/auth";
 import { AppError } from "../middleware/errorHandler";
 import { gregorianToHijri } from "../utils/hijri";
+import { sanitizeStr } from "../utils/sanitize";
+
+const fieldSchema = z.object({
+  fieldKey: z.string().min(1).max(100).transform(sanitizeStr),
+  fieldType: z.enum(["checkbox", "text", "radio", "textarea"]),
+  completed: z.boolean(),
+  value: z.union([z.string().max(2000).transform(sanitizeStr), z.number(), z.boolean(), z.null()]).optional(),
+  label: z.string().max(200).transform(sanitizeStr).optional(),
+  category: z.string().max(100).transform(sanitizeStr).optional(),
+}).passthrough();
+
+const dateParamSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD");
 
 export const entriesRouter = Router();
 
@@ -41,7 +54,7 @@ entriesRouter.get("/", requireAuth, async (req: AuthRequest, res: Response, next
 
 entriesRouter.get("/:date", requireAuth, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const { date } = req.params;
+    const date = dateParamSchema.parse(req.params.date);
     const entry = await DailyEntry.findOne({ userId: req.user!.userId, gregorianDate: date });
     if (!entry) return res.json({ entry: null });
 
@@ -58,8 +71,11 @@ entriesRouter.get("/:date", requireAuth, async (req: AuthRequest, res: Response,
 
 entriesRouter.put("/:date", requireAuth, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const { date } = req.params;
-    const { fields } = req.body;
+    const date = dateParamSchema.parse(req.params.date);
+    const rawFields = req.body?.fields;
+    if (!Array.isArray(rawFields)) throw new AppError(400, "fields must be an array");
+    if (rawFields.length > 100) throw new AppError(400, "Too many fields");
+    const fields = z.array(fieldSchema).parse(rawFields);
 
     let entry = await DailyEntry.findOne({ userId: req.user!.userId, gregorianDate: date });
 
@@ -69,7 +85,7 @@ entriesRouter.put("/:date", requireAuth, async (req: AuthRequest, res: Response,
         await entry.save();
         throw new AppError(423, "Entry is permanently locked");
       }
-      entry.fields = fields || [];
+      entry.fields = fields as unknown as typeof entry.fields;
       await entry.save();
     } else {
       const user = await User.findById(req.user!.userId);
@@ -88,7 +104,7 @@ entriesRouter.put("/:date", requireAuth, async (req: AuthRequest, res: Response,
         timezoneSnapshot: tz,
         lockAtUtc: computeLockAtUtc(date, tz),
         status: "open",
-        fields: fields || [],
+        fields: fields as unknown as IDailyEntryField[],
       });
       await entry.save();
     }
@@ -101,7 +117,7 @@ entriesRouter.put("/:date", requireAuth, async (req: AuthRequest, res: Response,
 
 entriesRouter.post("/:date/submit", requireAuth, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const { date } = req.params;
+    const date = dateParamSchema.parse(req.params.date);
     const entry = await DailyEntry.findOne({ userId: req.user!.userId, gregorianDate: date });
     if (!entry) throw new AppError(404, "Entry not found");
 

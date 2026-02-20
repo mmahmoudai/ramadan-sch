@@ -1,5 +1,6 @@
 import { Router, Response, NextFunction } from "express";
 import { z } from "zod";
+import { sanitizeStr } from "../utils/sanitize";
 import { Challenge } from "../models/Challenge";
 import { requireAuth, AuthRequest } from "../middleware/auth";
 import { AppError } from "../middleware/errorHandler";
@@ -8,15 +9,21 @@ import { getHijriChallengePeriodMetadata } from "../utils/hijri";
 export const challengesRouter = Router();
 
 const createSchema = z.object({
-  title: z.string().min(1).max(200),
-  description: z.string().max(1000).optional().default(""),
+  title: z.string().min(1).max(200).transform(sanitizeStr),
+  description: z.string().max(1000).optional().default("").transform(sanitizeStr),
   scope: z.enum(["daily", "weekly", "monthly"]),
 });
 
+const patchSchema = z.object({
+  title: z.string().min(1).max(200).transform(sanitizeStr).optional(),
+  description: z.string().max(1000).transform(sanitizeStr).optional(),
+  active: z.boolean().optional(),
+});
+
 const progressSchema = z.object({
-  dateGregorian: z.string(),
+  dateGregorian: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "dateGregorian must be YYYY-MM-DD"),
   progressValue: z.number().min(0).max(100),
-  notes: z.string().max(500).optional().default(""),
+  notes: z.string().max(500).optional().default("").transform(sanitizeStr),
   completed: z.boolean().optional().default(false),
 });
 
@@ -63,10 +70,13 @@ challengesRouter.post("/", requireAuth, async (req: AuthRequest, res: Response, 
 
 challengesRouter.patch("/:id", requireAuth, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
+    const body = patchSchema.parse(req.body);
     const updates: Record<string, unknown> = {};
-    if (req.body.title) updates.title = req.body.title;
-    if (req.body.description !== undefined) updates.description = req.body.description;
-    if (req.body.active !== undefined) updates.active = req.body.active;
+    if (body.title !== undefined) updates.title = body.title;
+    if (body.description !== undefined) updates.description = body.description;
+    if (body.active !== undefined) updates.active = body.active;
+
+    if (Object.keys(updates).length === 0) throw new AppError(400, "No valid fields to update");
 
     const challenge = await Challenge.findOneAndUpdate(
       { _id: req.params.id, userId: req.user!.userId },

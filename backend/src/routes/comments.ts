@@ -1,5 +1,6 @@
 import { Router, Response, NextFunction } from "express";
 import { z } from "zod";
+import { sanitizeStr } from "../utils/sanitize";
 import { Comment } from "../models/Comment";
 import { Reaction } from "../models/Reaction";
 import { VisibilityApproval } from "../models/VisibilityApproval";
@@ -9,18 +10,21 @@ import { AppError } from "../middleware/errorHandler";
 
 export const commentsRouter = Router();
 
+const ALLOWED_TARGET_TYPES = ["entry", "challenge", "report", "family"] as const;
+const ALLOWED_REACTION_TYPES = ["like", "love", "pray", "star", "fire"] as const;
+
 const commentSchema = z.object({
-  ownerUserId: z.string(),
-  targetType: z.string(),
-  targetId: z.string(),
-  body: z.string().min(1).max(1000),
+  ownerUserId: z.string().min(1).max(100),
+  targetType: z.enum(ALLOWED_TARGET_TYPES),
+  targetId: z.string().min(1).max(100),
+  body: z.string().min(1).max(1000).transform(sanitizeStr),
 });
 
 const reactionSchema = z.object({
-  ownerUserId: z.string(),
-  targetType: z.string(),
-  targetId: z.string(),
-  reactionType: z.string().min(1).max(50),
+  ownerUserId: z.string().min(1).max(100),
+  targetType: z.enum(ALLOWED_TARGET_TYPES),
+  targetId: z.string().min(1).max(100),
+  reactionType: z.enum(ALLOWED_REACTION_TYPES),
 });
 
 function getVisibilityScopeForTarget(targetType: string): "dashboard" | "reports" {
