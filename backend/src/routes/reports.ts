@@ -71,7 +71,8 @@ reportsRouter.get("/:id", requireAuth, async (req: AuthRequest, res: Response, n
     if (!report) throw new AppError(404, "Report not found");
 
     const isOwner = report.ownerUserId.toString() === req.user!.userId;
-    if (!isOwner) {
+    const isAdmin = req.user!.role === "admin";
+    if (!isOwner && !isAdmin) {
       const approval = await VisibilityApproval.findOne({
         ownerUserId: report.ownerUserId,
         viewerUserId: req.user!.userId,
@@ -87,7 +88,7 @@ reportsRouter.get("/:id", requireAuth, async (req: AuthRequest, res: Response, n
     }).sort({ gregorianDate: 1 });
 
     let owner = null;
-    if (report.includeProfileInfo || isOwner) {
+    if (report.includeProfileInfo || isOwner || isAdmin) {
       owner = await User.findById(report.ownerUserId).select("displayName bio avatarUrl");
     }
 
