@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { isLoggedIn, isAdmin, getToken } from "@/lib/auth";
 import { apiFetch } from "@/lib/api";
@@ -184,8 +184,19 @@ export default function AdminPage() {
   };
   const onManagementSearchSubmit = (e: FormEvent) => { e.preventDefault(); setManagementPage(1); setAppliedManagementSearch(managementSearch); };
 
+  const entitySectionRef = useRef<HTMLElement>(null);
+
   const onSelectUser = async (userId: string) => { setSelectedUserId(userId); await loadUserDetail(userId); };
   const onCloseUserPanel = () => { setSelectedUserId(null); setSelectedUserDetail(null); setEditForm(emptyEditForm); };
+
+  const onJumpToUserEntities = (userEmail: string, tab: AdminEntityTab) => {
+    setActiveTab(tab);
+    setManagementSearch(userEmail);
+    setAppliedManagementSearch(userEmail);
+    setManagementPage(1);
+    setManagementDetail(null);
+    setTimeout(() => entitySectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+  };
 
   const onSaveUser = () => {
     if (!selectedUserId) return;
@@ -479,7 +490,7 @@ export default function AdminPage() {
                 <SortTh label={t("admin.entries")} field="entryCount" sortBy={appliedUserFilters.sortBy} sortOrder={appliedUserFilters.sortOrder} onSort={onToggleSort} />
                 <SortTh label="Last Activity" field="lastActivityAt" sortBy={appliedUserFilters.sortBy} sortOrder={appliedUserFilters.sortOrder} onSort={onToggleSort} />
                 <SortTh label="Joined" field="createdAt" sortBy={appliedUserFilters.sortBy} sortOrder={appliedUserFilters.sortOrder} onSort={onToggleSort} />
-                <th className="px-3 py-2 text-left">{t("admin.actions")}</th>
+                <th className="px-3 py-2 text-left" colSpan={2}>{t("admin.actions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -503,6 +514,20 @@ export default function AdminPage() {
                       View
                     </button>
                   </td>
+                  <td className="px-3 py-2">
+                    <div className="flex flex-wrap gap-1">
+                      {(["families", "entries", "challenges", "reports"] as AdminEntityTab[]).map((tab) => (
+                        <button
+                          key={tab}
+                          onClick={() => onJumpToUserEntities(user.email, tab)}
+                          title={`View ${user.displayName}'s ${tab}`}
+                          className="text-xs px-2 py-0.5 rounded border border-blue-200 text-blue-700 hover:bg-blue-50 font-medium capitalize"
+                        >
+                          {tab[0].toUpperCase() + tab.slice(1, 3)}
+                        </button>
+                      ))}
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -519,7 +544,7 @@ export default function AdminPage() {
       </section>
 
       {/* ── Entity Management ─────────────────────────────────────────────── */}
-      <section className="border-2 border-line rounded-xl p-4 space-y-4">
+      <section ref={entitySectionRef} className="border-2 border-line rounded-xl p-4 space-y-4">
         <h2 className="text-xl font-bold">Entity Management</h2>
 
         <div className="flex flex-wrap items-center gap-3">
