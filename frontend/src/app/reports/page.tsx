@@ -39,14 +39,14 @@ function toDateStr(d: Date): string {
 function getQuickDates(preset: string): { start: string; end: string; scope: string } {
   const now = new Date();
   const today = toDateStr(now);
-  if (preset === "today") return { start: today, end: today, scope: "daily" };
+  if (preset === "today") return { start: today, end: today, scope: "day" };
   if (preset === "thisWeek") {
     const day = now.getDay();
     const mon = new Date(now);
     mon.setDate(now.getDate() - ((day + 6) % 7));
     const sun = new Date(mon);
     sun.setDate(mon.getDate() + 6);
-    return { start: toDateStr(mon), end: toDateStr(sun), scope: "weekly" };
+    return { start: toDateStr(mon), end: toDateStr(sun), scope: "week" };
   }
   if (preset === "lastWeek") {
     const day = now.getDay();
@@ -54,12 +54,12 @@ function getQuickDates(preset: string): { start: string; end: string; scope: str
     mon.setDate(now.getDate() - ((day + 6) % 7) - 7);
     const sun = new Date(mon);
     sun.setDate(mon.getDate() + 6);
-    return { start: toDateStr(mon), end: toDateStr(sun), scope: "weekly" };
+    return { start: toDateStr(mon), end: toDateStr(sun), scope: "week" };
   }
   if (preset === "thisMonth") {
     const first = new Date(now.getFullYear(), now.getMonth(), 1);
     const last = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    return { start: toDateStr(first), end: toDateStr(last), scope: "monthly" };
+    return { start: toDateStr(first), end: toDateStr(last), scope: "month" };
   }
   return { start: today, end: today, scope: "custom" };
 }
@@ -70,7 +70,7 @@ export default function ReportsPage() {
   const [reports, setReports] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [periodScope, setPeriodScope] = useState("weekly");
+  const [periodScope, setPeriodScope] = useState("week");
   const [periodStart, setPeriodStart] = useState("");
   const [periodEnd, setPeriodEnd] = useState("");
   const [visibility, setVisibility] = useState<"public" | "private">("private");
@@ -276,7 +276,7 @@ export default function ReportsPage() {
             <div>
               <label className="block text-xs font-medium text-gray-500 mb-2">Scope</label>
               <div className="flex gap-2">
-                {(["daily", "weekly", "monthly", "custom"] as const).map((s) => (
+                {(["day", "week", "month", "custom"] as const).map((s) => (
                   <button key={s} type="button" onClick={() => setPeriodScope(s)}
                     className={`flex-1 px-3 py-2 rounded-xl text-sm font-semibold border-2 transition-all ${
                       periodScope === s ? "bg-ink text-white border-ink shadow-sm" : "border-line hover:border-gray-300"
