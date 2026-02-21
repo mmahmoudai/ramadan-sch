@@ -1,30 +1,29 @@
 import path from "path";
+import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
-const MAILTRAP_TOKEN = process.env.MAILTRAP_TOKEN || process.env.SMTP_PASS || "";
-const FROM_EMAIL = process.env.EMAIL_FROM || "noreply@ramadantracker.club";
+const FROM_EMAIL = process.env.EMAIL_FROM || "info@ramadantracker.club";
 const FROM_NAME = "Ramadan Tracker";
 const FRONTEND = process.env.FRONTEND_URL || "https://ramadantracker.club";
 
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || "redbull.mxrouting.net",
+  port: parseInt(process.env.SMTP_PORT || "465"),
+  secure: true,
+  auth: {
+    user: process.env.SMTP_USER || "info@ramadantracker.club",
+    pass: process.env.SMTP_PASS || "",
+  },
+});
+
 async function sendMail(to: string, subject: string, html: string): Promise<void> {
-  const res = await fetch("https://send.api.mailtrap.io/api/send", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${MAILTRAP_TOKEN}`,
-    },
-    body: JSON.stringify({
-      from: { email: FROM_EMAIL, name: FROM_NAME },
-      to: [{ email: to }],
-      subject,
-      html,
-    }),
+  await transporter.sendMail({
+    from: `"${FROM_NAME}" <${FROM_EMAIL}>`,
+    to,
+    subject,
+    html,
   });
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`Mailtrap API error ${res.status}: ${body}`);
-  }
 }
 
 function wrap(body: string): string {
