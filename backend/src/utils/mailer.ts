@@ -1,29 +1,31 @@
 import path from "path";
-import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
+const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
 const FROM_EMAIL = process.env.EMAIL_FROM || "info@ramadantracker.club";
 const FROM_NAME = "Ramadan Tracker";
 const FRONTEND = process.env.FRONTEND_URL || "https://ramadantracker.club";
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || "redbull.mxrouting.net",
-  port: parseInt(process.env.SMTP_PORT || "465"),
-  secure: true,
-  auth: {
-    user: process.env.SMTP_USER || "info@ramadantracker.club",
-    pass: process.env.SMTP_PASS || "",
-  },
-});
-
 async function sendMail(to: string, subject: string, html: string): Promise<void> {
-  await transporter.sendMail({
-    from: `"${FROM_NAME}" <${FROM_EMAIL}>`,
-    to,
-    subject,
-    html,
+  if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY is not set");
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${RESEND_API_KEY}`,
+    },
+    body: JSON.stringify({
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+      to: [to],
+      subject,
+      html,
+    }),
   });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Resend API error ${res.status}: ${body}`);
+  }
 }
 
 function wrap(body: string): string {
